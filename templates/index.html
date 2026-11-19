@@ -1,0 +1,201 @@
+{% extends "layouts/app.html" %}
+{% from "config/navigation.html" import NAVIGATION %}
+
+{% block title %}Dashboard{% endblock %}
+{% block body_class %}page-dashboard{% endblock %}
+
+{# The dashboard replaces the standard page header with a hero. #}
+{% block page_header %}
+<section class="hero" aria-labelledby="dashboardGreeting">
+    <div class="hero-copy">
+        <p class="hero-kicker"><span class="hero-dot" aria-hidden="true"></span> Your local AI study workspace</p>
+        <h1 class="hero-title" id="dashboardGreeting">What are you studying today?</h1>
+        <p class="hero-text">Notes from PDFs and lectures, answers from your own documents, and quizzes that show what to revise. All of it runs on this laptop.</p>
+        <div class="hero-actions">
+            <a class="btn btn-primary btn-lg" href="/quick-notes"><i class="bi bi-journal-text" aria-hidden="true"></i> Make notes from a PDF</a>
+            <a class="btn btn-secondary btn-lg" href="/assistant"><i class="bi bi-chat-left-text" aria-hidden="true"></i> Ask a question</a>
+        </div>
+    </div>
+
+    <div class="hero-visual" aria-hidden="true">
+        <div class="orb"></div>
+        <div class="orb-ring orb-ring-1"></div>
+        <div class="orb-ring orb-ring-2"></div>
+        <div class="hero-card hero-card-a"><i class="bi bi-mic"></i><span>Lecture → notes</span></div>
+        <div class="hero-card hero-card-b"><i class="bi bi-patch-question"></i><span>Quiz ready</span></div>
+        <div class="hero-card hero-card-c"><i class="bi bi-file-earmark-text"></i><span>Answer, page 3</span></div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="progress-row" id="progress" aria-label="Your study progress">
+    <article class="panel goal-card">
+        <div class="ring" id="goalRing" style="--value: 0">
+            <svg viewBox="0 0 120 120" aria-hidden="true">
+                <defs>
+                    <linearGradient id="ringGradient" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#8b5cf6"/>
+                        <stop offset="55%" stop-color="#6366f1"/>
+                        <stop offset="100%" stop-color="#22d3ee"/>
+                    </linearGradient>
+                </defs>
+                <circle class="ring-track" cx="60" cy="60" r="52"/>
+                <circle class="ring-value" cx="60" cy="60" r="52" pathLength="100"/>
+            </svg>
+            <div class="ring-label"><strong id="goalCount">0/3</strong><span>today</span></div>
+        </div>
+        <div class="goal-copy">
+            <h2 class="panel-title">Today's goal</h2>
+            <p class="panel-description" id="goalText">Finish 3 study actions today: notes, questions, quizzes or focus sessions.</p>
+            <div class="goal-stepper" role="group" aria-label="Change daily goal">
+                <button type="button" class="icon-button" id="goalMinus" aria-label="Lower daily goal"><i class="bi bi-dash-lg" aria-hidden="true"></i></button>
+                <span id="goalValue">3 a day</span>
+                <button type="button" class="icon-button" id="goalPlus" aria-label="Raise daily goal"><i class="bi bi-plus-lg" aria-hidden="true"></i></button>
+            </div>
+        </div>
+    </article>
+
+    <article class="panel streak-card">
+        <div class="streak-head">
+            <span class="streak-flame" aria-hidden="true"><i class="bi bi-fire"></i></span>
+            <div>
+                <h2 class="panel-title"><span id="streakDays">0</span> day streak</h2>
+                <p class="panel-description" id="streakText">Study today to start a streak.</p>
+            </div>
+        </div>
+        <ol class="week-dots" id="weekDots" aria-label="This week"></ol>
+    </article>
+
+    <article class="panel level-card">
+        <div class="level-head">
+            <span class="level-badge" aria-hidden="true"><span id="levelNumber">1</span></span>
+            <div>
+                <h2 class="panel-title" id="levelName">Fresh Starter</h2>
+                <p class="panel-description"><span id="levelXp">0</span> XP earned</p>
+            </div>
+        </div>
+        <div class="xp-bar" role="progressbar" aria-label="Progress to next level" aria-valuemin="0" aria-valuemax="100" id="levelBar">
+            <span class="xp-bar-fill" id="levelBarFill"></span>
+        </div>
+        <p class="level-next" id="levelText">100 XP to Curious Learner</p>
+    </article>
+</section>
+
+<section aria-labelledby="toolsHeading">
+    <div class="section-head">
+        <h2 class="section-title" id="toolsHeading">Your tools</h2>
+        <p class="section-intro">Each one works on what you bring to it.</p>
+    </div>
+
+    <div class="tool-grid">
+        {% for group in NAVIGATION %}
+            {% for item in group["items"] if item.summary %}
+            <a class="tool-card" href="{{ item.path }}" data-accent="{{ item.accent }}">
+                <span class="tool-card-icon"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i></span>
+                <strong class="tool-card-title">{{ item.label }}</strong>
+                <span class="tool-card-text">{{ item.summary }}</span>
+                <span class="tool-card-foot">
+                    <span class="tool-card-input">{{ item.works_with }}</span>
+                    <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+                </span>
+            </a>
+            {% endfor %}
+        {% endfor %}
+    </div>
+</section>
+
+<div class="dashboard-motivation">
+    <section class="panel focus-card" id="focus" aria-labelledby="focusHeading">
+        <div class="focus-head">
+            <div>
+                <h2 class="panel-title" id="focusHeading">Focus timer</h2>
+                <p class="panel-description">Study without switching tabs, then take a short break. Keeps running while you use other tools.</p>
+            </div>
+            <span class="badge" id="focusMode">Focus</span>
+        </div>
+        <div class="focus-body">
+            <div class="focus-time" id="focusTime" aria-live="off">25:00</div>
+            <div class="focus-presets" role="group" aria-label="Session length">
+                <button type="button" class="preset" data-minutes="15">15 min</button>
+                <button type="button" class="preset is-selected" data-minutes="25">25 min</button>
+                <button type="button" class="preset" data-minutes="45">45 min</button>
+            </div>
+            <div class="focus-actions">
+                <button type="button" class="btn btn-primary btn-lg" id="focusStart"><i class="bi bi-play-fill" aria-hidden="true"></i> Start focus</button>
+                <button type="button" class="btn btn-ghost" id="focusReset"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Reset</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel achievements-card" aria-labelledby="achievementsHeading">
+        <div class="focus-head">
+            <div>
+                <h2 class="panel-title" id="achievementsHeading">Achievements</h2>
+                <p class="panel-description"><span id="achievementCount">0</span> of <span id="achievementTotal">12</span> unlocked</p>
+            </div>
+        </div>
+        <ul class="badge-grid" id="achievementList"></ul>
+    </section>
+</div>
+
+<div class="dashboard-lower">
+    <section class="panel" aria-labelledby="sessionHeading">
+        <h2 class="panel-title" id="sessionHeading">A study session in three steps</h2>
+        <ol class="session-steps">
+            <li>
+                <strong>Capture</strong>
+                <span>Turn the lecture PDF into notes with <a href="/quick-notes">QuickNotes</a>, or the class recording with <a href="/voice-snap">VoiceSnap</a>.</span>
+            </li>
+            <li>
+                <strong>Understand</strong>
+                <span>Ask <a href="/ask-away">AskAway</a> about anything unclear. Answers show the pages they came from.</span>
+            </li>
+            <li>
+                <strong>Test yourself</strong>
+                <span>Take a <a href="/brain-check">BrainCheck</a> quiz on the topic and revise what you missed.</span>
+            </li>
+        </ol>
+    </section>
+
+    <section class="panel ai-panel" id="aiPanel" data-state="checking" aria-labelledby="aiPanelHeading">
+        <div class="ai-panel-head">
+            <span class="ai-panel-icon" aria-hidden="true"><i class="bi bi-cpu"></i></span>
+            <div>
+                <h2 class="panel-title" id="aiPanelHeading">Local AI</h2>
+                <p class="panel-description" id="aiPanelText">Checking whether Ollama is running…</p>
+            </div>
+        </div>
+        <div class="ai-panel-help" id="aiPanelHelp" hidden>
+            <p>Notes, answers and quizzes need Ollama. Start it, then reload this page:</p>
+            <pre><code>ollama serve
+ollama list</code></pre>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+    (function () {
+        var hour = new Date().getHours();
+        var part = hour < 5 ? "Studying late" : hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+        var greeting = document.getElementById("dashboardGreeting");
+        if (greeting) greeting.textContent = part + ". What are you studying today?";
+
+        document.addEventListener("studymate:health", function (event) {
+            var panel = document.getElementById("aiPanel");
+            var text = document.getElementById("aiPanelText");
+            var help = document.getElementById("aiPanelHelp");
+            if (!panel || !text) return;
+            var ready = event.detail.state === "ready";
+            panel.dataset.state = ready ? "ready" : "offline";
+            text.textContent = ready
+                ? "Ollama is running. All tools are ready to use."
+                : "Ollama is not running, so the AI tools can't answer yet.";
+            if (help) help.hidden = ready;
+        });
+    })();
+</script>
+{% endblock %}

@@ -1,0 +1,47 @@
+{#
+    App layout: sidebar + topbar + page header + content.
+    Page templates extend this and fill these blocks:
+      title, page_title, page_description, page_actions,
+      content, head (extra <link>/<style>), scripts (page JS)
+#}
+{% extends "layouts/base.html" %}
+{% from "config/navigation.html" import NAV_BY_PATH %}
+
+{% block body_attrs %}data-accent="{{ (NAV_BY_PATH.get(request.path) or {}).get('accent', 'violet') }}"{% endblock %}
+
+{% block body %}
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="shell">
+    {% include "partials/_sidebar.html" %}
+    <div class="sidebar-backdrop" id="sidebarOverlay" hidden></div>
+
+    <div class="shell-main">
+        {% include "partials/_topbar.html" %}
+
+        <main class="page" id="main" tabindex="-1">
+            {% block page_header %}
+            {% set nav_item = NAV_BY_PATH.get(request.path) %}
+            <header class="page-header">
+                {% if nav_item %}
+                <span class="page-icon" aria-hidden="true"><i class="bi bi-{{ nav_item.icon }}"></i></span>
+                {% endif %}
+                <div class="page-header-text">
+                    <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+                    {% if self.page_description() | trim %}
+                    <p class="page-description">{% block page_description %}{% endblock %}</p>
+                    {% endif %}
+                </div>
+                {% if self.page_actions() | trim %}
+                <div class="page-actions">{% block page_actions %}{% endblock %}</div>
+                {% endif %}
+            </header>
+            {% endblock %}
+
+            {% block content %}{% endblock %}
+        </main>
+
+        {% include "partials/_footer.html" %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,59 @@
+/* AskAway: document panel + document chat. */
+
+.page-ask-away .chat-log {
+    min-height: 28rem;
+}
+
+.page-ask-away #welcomeMessage {
+    margin: auto 0;
+}
+
+.document-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+    padding: var(--space-4);
+    border: 1px solid color-mix(in srgb, var(--tool) 45%, transparent);
+    border-radius: var(--radius-panel);
+    background: radial-gradient(16rem 8rem at 0% 0%, color-mix(in srgb, var(--tool-glow) 35%, transparent), transparent 70%), var(--sheet-sunken);
+    box-shadow: 0 10px 30px -14px var(--tool-glow);
+}
+
+.document-card-name {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+}
+
+.document-card-name i {
+    color: var(--success);
+}
+
+.document-card-name strong {
+    overflow-wrap: anywhere;
+}
+
+.document-card-details {
+    color: var(--pencil);
+    font-size: var(--text-sm);
+    line-height: 1.6;
+}
+
+.document-card .btn {
+    align-self: flex-start;
+}
+
+.ask-tips ul {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+    padding-left: 1.1rem;
+    color: var(--pencil);
+    font-size: var(--text-sm);
+}
+
+.page-ask-away #chatStatus:empty {
+    display: none;
+}

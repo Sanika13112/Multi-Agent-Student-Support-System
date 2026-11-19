@@ -1,0 +1,204 @@
+/* ==========================================================
+   StudyMate AI — design tokens  ·  "Premium dark + glow"
+   Every colour, size and radius used by the UI comes from here.
+   Dark is the default theme; [data-theme="light"] is the
+   lavender-glass variant.
+   ========================================================== */
+
+@font-face {
+    font-family: "Schibsted Grotesk";
+    src: url("../vendor/fonts/schibsted-grotesk-latin-wght-normal.woff2") format("woff2");
+    font-weight: 400 900;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+        U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: "Schibsted Grotesk";
+    src: url("../vendor/fonts/schibsted-grotesk-latin-ext-wght-normal.woff2") format("woff2");
+    font-weight: 400 900;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308,
+        U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-family: "Source Serif 4";
+    src: url("../vendor/fonts/source-serif-4-latin-wght-normal.woff2") format("woff2");
+    font-weight: 200 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Source Serif 4";
+    src: url("../vendor/fonts/source-serif-4-latin-wght-italic.woff2") format("woff2");
+    font-weight: 200 900;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* ---------------- Dark (default) ---------------- */
+:root {
+    color-scheme: dark;
+
+    /* Canvas and surfaces */
+    --paper: #080a14;                          /* page canvas */
+    --glow-a: rgb(124 58 237 / 0.30);          /* violet light, top left */
+    --glow-b: rgb(37 99 235 / 0.22);           /* blue light, right */
+    --glow-c: rgb(6 182 212 / 0.12);           /* cyan light, bottom */
+    --sheet: rgb(255 255 255 / 0.045);         /* glass surface */
+    --sheet-solid: #11142a;                    /* opaque surface (menus, drawer) */
+    --sheet-sunken: rgb(255 255 255 / 0.035);  /* inputs, wells */
+    --glass-highlight: rgb(255 255 255 / 0.07);
+    --glass-blur: 18px;
+
+    /* Text */
+    --graphite: #eef0ff;
+    --pencil: #a3a8c7;
+    --pencil-soft: #6f7596;
+
+    /* Lines */
+    --rule: rgb(255 255 255 / 0.08);
+    --rule-strong: rgb(255 255 255 / 0.16);
+
+    /* Brand: violet → indigo → cyan */
+    --ink: #9d8cff;
+    --ink-hover: #b9adff;
+    --ink-wash: rgb(139 92 246 / 0.16);
+    --on-ink: #ffffff;
+    --accent-1: #8b5cf6;
+    --accent-2: #6366f1;
+    --accent-3: #22d3ee;
+    --gradient: linear-gradient(120deg, var(--accent-1) 0%, var(--accent-2) 48%, var(--accent-3) 100%);
+    --gradient-soft: linear-gradient(120deg, rgb(139 92 246 / 0.22), rgb(34 211 238 / 0.14));
+    --glow: 0 0 0 1px rgb(139 92 246 / 0.35), 0 8px 28px -6px rgb(99 102 241 / 0.55);
+    --glow-strong: 0 0 0 1px rgb(167 139 250 / 0.55), 0 10px 40px -4px rgb(124 58 237 / 0.65);
+
+    /* "Highlighter" = the emphasis colour (selected, key terms) */
+    --highlighter: #a78bfa;
+    --on-highlighter: #0b0c1a;
+
+    /* Per-page accent (overridden per tool via body[data-accent]) */
+    --tool: #8b5cf6;
+    --tool-glow: rgb(139 92 246 / 0.45);
+
+    /* States */
+    --success: #4ade80;
+    --success-wash: rgb(74 222 128 / 0.12);
+    --danger: #fb7185;
+    --danger-wash: rgb(251 113 133 / 0.12);
+    --warning: #fbbf24;
+    --warning-wash: rgb(251 191 36 / 0.12);
+
+    /* Typography */
+    --font-ui: "Schibsted Grotesk", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --font-read: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --font-code: ui-monospace, "Cascadia Code", Consolas, "Courier New", monospace;
+
+    --text-xs: 0.8125rem;
+    --text-sm: 0.875rem;
+    --text-md: 0.9375rem;
+    --text-lg: 1.0625rem;
+    --text-xl: 1.3125rem;
+    --text-2xl: 1.875rem;
+    --text-3xl: 2.75rem;
+
+    --leading-tight: 1.15;
+    --leading-ui: 1.5;
+    --leading-read: 1.7;
+
+    /* Space */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-10: 2.5rem;
+    --space-12: 3rem;
+
+    /* Shape: softer, glassy */
+    --radius-sheet: 18px;
+    --radius-panel: 16px;
+    --radius-control: 11px;
+    --radius-pill: 999px;
+
+    --shadow-sheet: inset 0 1px 0 var(--glass-highlight), 0 20px 50px -24px rgb(0 0 0 / 0.75);
+    --shadow-pop: 0 24px 60px -16px rgb(0 0 0 / 0.8);
+    --focus-ring: 0 0 0 3px rgb(167 139 250 / 0.45);
+
+    /* Layout */
+    --sidebar-width: 16rem;
+    --content-max: 80rem;
+    --reading-max: 46rem;
+    --topbar-height: 4rem;
+
+    --duration: 180ms;
+    --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* ---------------- Light: lavender glass ---------------- */
+[data-theme="light"] {
+    color-scheme: light;
+
+    --paper: #f3f1fb;
+    --glow-a: rgb(167 139 250 / 0.35);
+    --glow-b: rgb(96 165 250 / 0.25);
+    --glow-c: rgb(34 211 238 / 0.18);
+    --sheet: rgb(255 255 255 / 0.72);
+    --sheet-solid: #ffffff;
+    --sheet-sunken: rgb(99 102 241 / 0.05);
+    --glass-highlight: rgb(255 255 255 / 0.9);
+
+    --graphite: #1b1736;
+    --pencil: #5d5a7a;
+    --pencil-soft: #8e8bab;
+
+    --rule: rgb(76 61 160 / 0.12);
+    --rule-strong: rgb(76 61 160 / 0.22);
+
+    --ink: #6d4ce6;
+    --ink-hover: #5a37d6;
+    --ink-wash: rgb(124 58 237 / 0.10);
+    --on-ink: #ffffff;
+    --accent-1: #7c3aed;
+    --accent-2: #4f46e5;
+    --accent-3: #0891b2;
+    --gradient-soft: linear-gradient(120deg, rgb(124 58 237 / 0.12), rgb(8 145 178 / 0.08));
+    --glow: 0 0 0 1px rgb(124 58 237 / 0.25), 0 8px 24px -8px rgb(79 70 229 / 0.45);
+    --glow-strong: 0 0 0 1px rgb(124 58 237 / 0.4), 0 12px 32px -8px rgb(124 58 237 / 0.5);
+
+    --highlighter: #7c3aed;
+    --on-highlighter: #ffffff;
+
+    --success: #15803d;
+    --success-wash: rgb(21 128 61 / 0.10);
+    --danger: #be123c;
+    --danger-wash: rgb(190 18 60 / 0.08);
+    --warning: #b45309;
+    --warning-wash: rgb(180 83 9 / 0.10);
+
+    --shadow-sheet: inset 0 1px 0 var(--glass-highlight), 0 18px 44px -26px rgb(76 61 160 / 0.45);
+    --shadow-pop: 0 24px 60px -18px rgb(76 61 160 / 0.45);
+    --focus-ring: 0 0 0 3px rgb(124 58 237 / 0.3);
+}
+
+/* ---------------- Per-tool accents ---------------- */
+[data-accent="violet"]  { --tool: #a78bfa; --tool-glow: rgb(167 139 250 / 0.45); }
+[data-accent="indigo"]  { --tool: #818cf8; --tool-glow: rgb(129 140 248 / 0.45); }
+[data-accent="pink"]    { --tool: #f472b6; --tool-glow: rgb(244 114 182 / 0.45); }
+[data-accent="cyan"]    { --tool: #22d3ee; --tool-glow: rgb(34 211 238 / 0.40); }
+[data-accent="amber"]   { --tool: #fbbf24; --tool-glow: rgb(251 191 36 / 0.40); }
+[data-accent="emerald"] { --tool: #34d399; --tool-glow: rgb(52 211 153 / 0.40); }
+
+[data-theme="light"] [data-accent="violet"],  [data-theme="light"][data-accent="violet"]  { --tool: #7c3aed; }
+[data-theme="light"] [data-accent="indigo"],  [data-theme="light"][data-accent="indigo"]  { --tool: #4f46e5; }
+[data-theme="light"] [data-accent="pink"],    [data-theme="light"][data-accent="pink"]    { --tool: #db2777; }
+[data-theme="light"] [data-accent="cyan"],    [data-theme="light"][data-accent="cyan"]    { --tool: #0891b2; }
+[data-theme="light"] [data-accent="amber"],   [data-theme="light"][data-accent="amber"]   { --tool: #d97706; }
+[data-theme="light"] [data-accent="emerald"], [data-theme="light"][data-accent="emerald"] { --tool: #059669; }

@@ -1,0 +1,47 @@
+/* QuickNotes: only what the shared components don't cover. */
+
+.document-summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-top: var(--space-3);
+}
+
+.document-summary-name {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--rule);
+}
+
+.document-summary-name strong {
+    overflow-wrap: anywhere;
+}
+
+.document-summary-name span {
+    color: var(--pencil);
+    font-size: var(--text-sm);
+}
+
+.page-quick-notes .qn-document-empty[hidden] + .document-summary {
+    margin-top: var(--space-3);
+}
+
+.nt-translation-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.nt-translation-actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.nt-translation-output {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    line-height: 1.8;
+}

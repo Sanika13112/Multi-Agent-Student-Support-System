@@ -1,0 +1,35 @@
+/* ==========================================================
+   StudyMate AI — stylesheet entry point
+   ----------------------------------------------------------
+   Cascade layers decide which rules win, in this order
+   (later layers beat earlier ones regardless of selector
+   specificity), so page styles never need !important.
+
+   Adding a page:  create pages/<name>.css and add one
+   @import line in the "pages" block below.
+   ========================================================== */
+
+@layer tokens, base, layout, components, pages, utilities;
+
+@import url("tokens.css") layer(tokens);
+@import url("base.css") layer(base);
+@import url("layout.css") layer(layout);
+
+@import url("components/buttons.css") layer(components);
+@import url("components/forms.css") layer(components);
+@import url("components/surfaces.css") layer(components);
+@import url("components/feedback.css") layer(components);
+@import url("components/upload.css") layer(components);
+@import url("components/chat.css") layer(components);
+@import url("components/prose.css") layer(components);
+@import url("components/motivation.css") layer(components);
+
+@import url("pages/dashboard.css") layer(pages);
+@import url("pages/assistant.css") layer(pages);
+@import url("pages/quick-notes.css") layer(pages);
+@import url("pages/voice-snap.css") layer(pages);
+@import url("pages/ask-away.css") layer(pages);
+@import url("pages/brain-check.css") layer(pages);
+@import url("pages/career-guidance.css") layer(pages);
+
+@import url("utilities.css") layer(utilities);

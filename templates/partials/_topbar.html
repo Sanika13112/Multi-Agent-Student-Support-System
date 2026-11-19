@@ -1,0 +1,42 @@
+{% from "config/navigation.html" import NAVIGATION %}
+{% set ns = namespace(group=None, item=None) %}
+{% for group in NAVIGATION %}{% for item in group["items"] %}
+    {% if request.path == item.path or (item.path != "/" and request.path.startswith(item.path ~ "/")) %}
+        {% set ns.group = group.title %}{% set ns.item = item.label %}
+    {% endif %}
+{% endfor %}{% endfor %}
+<header class="topbar">
+    <button class="icon-button menu-button" id="menuToggle" type="button"
+            aria-label="Open menu" aria-controls="sidebar" aria-expanded="false">
+        <i class="bi bi-list" aria-hidden="true"></i>
+    </button>
+
+    <div class="topbar-trail">
+        {% if ns.group and ns.item != "Dashboard" %}
+        <a href="/">{{ ns.group }}</a>
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+        <strong>{{ ns.item }}</strong>
+        {% else %}
+        <strong>{{ ns.item or "StudyMate AI" }}</strong>
+        {% endif %}
+    </div>
+
+    <div class="topbar-actions">
+        <a class="focus-pill" id="focusPill" href="/#focus" hidden>
+            <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+            <span data-focus-time>25:00</span>
+        </a>
+        <a class="streak-pill" id="streakPill" href="/#progress" data-active="false">
+            <i class="bi bi-fire" aria-hidden="true"></i>
+            <span data-streak-count>0</span>
+        </a>
+        <span class="ai-status" id="aiStatus" data-state="checking" role="status" aria-live="polite"
+              title="Status of the local AI model (Ollama)">
+            <span class="ai-status-dot" aria-hidden="true"></span>
+            <span class="ai-status-label" id="aiStatusLabel">Checking local AI</span>
+        </span>
+        <button class="icon-button" id="themeToggle" type="button" aria-label="Switch to dark theme">
+            <i class="bi bi-moon-stars" aria-hidden="true"></i>
+        </button>
+    </div>
+</header>

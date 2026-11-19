@@ -1,0 +1,170 @@
+{% extends "layouts/app.html" %}
+{% import "macros/ui.html" as ui %}
+
+{% block title %}BrainCheck{% endblock %}
+{% block body_class %}page-brain-check{% endblock %}
+
+{% block page_title %}BrainCheck{% endblock %}
+{% block page_description %}Test yourself with multiple-choice questions on any topic, then see which topics need more revision.{% endblock %}
+
+{% block content %}
+<div class="bc-flow">
+
+    {# ---------------- Quiz in progress (shown by brain_check.js) ---------------- #}
+    <section id="quizArea" class="sheet bc-quiz-area" style="display:none;" aria-labelledby="quizTitle">
+        <header class="sheet-header bc-quiz-header">
+            <div>
+                <h2 class="sheet-title" id="quizTitle">Quiz Title</h2>
+                <p class="sheet-subtitle" id="quizSubtitle">Subject, difficulty, questions</p>
+            </div>
+            <div class="bc-timer" id="quizTimer" role="timer" aria-live="off">
+                <i class="bi bi-stopwatch" aria-hidden="true"></i>
+                <span class="visually-hidden">Time left</span>
+                <strong id="timerDisplay">10:00</strong>
+            </div>
+        </header>
+
+        <div class="bc-progress">
+            <div class="bc-progress-labels">
+                <span id="questionProgress">Question 1 of 5</span>
+                <strong id="progressPercent">20%</strong>
+            </div>
+            <div class="bc-progress-track"><div class="bc-progress-fill" id="progressFill"></div></div>
+        </div>
+
+        <div class="sheet-body">
+            <div id="questionArea" aria-live="polite"></div>
+        </div>
+
+        <footer class="bc-quiz-nav">
+            <button type="button" class="btn btn-secondary" id="previousQuestionButton">
+                <i class="bi bi-arrow-left" aria-hidden="true"></i> Previous
+            </button>
+            <span class="bc-quiz-hint">Pick an answer, then move on.</span>
+            <button type="button" class="btn btn-primary" id="nextQuestionButton">
+                Next question <i class="bi bi-arrow-right" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="btn btn-primary" id="submitQuizButton" style="display:none;">
+                <i class="bi bi-check2-circle" aria-hidden="true"></i> Submit quiz
+            </button>
+        </footer>
+    </section>
+
+    {# ---------------- Results (shown by brain_check.js) ---------------- #}
+    <section id="resultsArea" class="sheet bc-results-area" style="display:none;" aria-labelledby="resultsHeading">
+        <div class="sheet-body">
+            <div class="bc-score">
+                <div class="bc-score-number">
+                    <strong id="resultPercentage">0%</strong>
+                    <span>your score</span>
+                </div>
+                <div>
+                    <h2 class="section-title" id="resultsHeading">Quiz complete</h2>
+                    <p class="section-intro" id="resultMessage">Review your answers below.</p>
+                    <dl class="bc-counts">
+                        <div><dt>Correct</dt><dd id="correctCount">0</dd></div>
+                        <div><dt>Incorrect</dt><dd id="incorrectCount">0</dd></div>
+                        <div><dt>Unanswered</dt><dd id="unansweredCount">0</dd></div>
+                    </dl>
+                </div>
+            </div>
+
+            <h3 class="bc-review-title">Answer review</h3>
+            <div id="answerReview" class="bc-review-list"></div>
+
+            <div class="bc-results-actions">
+                <button type="button" class="btn btn-primary" id="restartQuizButton">
+                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i> Create another quiz
+                </button>
+                <a class="btn btn-ghost" href="/">Back to dashboard</a>
+            </div>
+        </div>
+    </section>
+
+    {# ---------------- Setup (history + study plan panels are inserted after this by JS) ---------------- #}
+    <section id="quizSetupFormWrapper" class="panel bc-setup" aria-labelledby="setupHeading">
+        <form id="quizSetupForm" novalidate>
+            <div class="bc-setup-grid">
+                <div>
+                    <h2 class="section-title" id="setupHeading">Create a quiz</h2>
+                    <p class="section-intro">Pick a subject and a specific topic. Specific topics give better questions.</p>
+
+                    <div class="form-grid mt-4">
+                        <div class="field">
+                            <label class="field-label" for="quizSubject">Subject<span class="required" aria-hidden="true">*</span></label>
+                            <select class="select" id="quizSubject" required>
+                                <option value="">Select a subject</option>
+                                <option value="Machine Learning">Machine Learning</option>
+                                <option value="Deep Learning">Deep Learning</option>
+                                <option value="Data Structures and Algorithms">Data Structures and Algorithms</option>
+                                <option value="Database Management Systems">DBMS</option>
+                                <option value="Java Programming">Java Programming</option>
+                                <option value="Computer Networks">Computer Networks</option>
+                                <option value="Theory of Computation">Theory of Computation</option>
+                                <option value="Python Programming">Python Programming</option>
+                                <option value="Artificial Intelligence">Artificial Intelligence</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label class="field-label" for="quizTopic">Topic<span class="required" aria-hidden="true">*</span></label>
+                            <input class="input" type="text" id="quizTopic" placeholder="e.g. Decision trees, normalization" maxlength="200" required>
+                        </div>
+
+                        <div class="field">
+                            <label class="field-label" for="quizDifficulty">Difficulty</label>
+                            <select class="select" id="quizDifficulty">
+                                <option value="Easy">Easy</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="Hard">Hard</option>
+                                <option value="Mixed">Mixed</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label class="field-label" for="questionCount">Number of questions</label>
+                            <select class="select" id="questionCount">
+                                <option value="5" selected>5 questions</option>
+                                <option value="10">10 questions</option>
+                                <option value="15">15 questions</option>
+                                <option value="20">20 questions</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bc-settings">
+                    <h3 class="panel-title">Settings</h3>
+                    <label class="switch-row" for="enableTimer">
+                        <span class="switch-row-text">
+                            <strong>Timer</strong>
+                            <small>60 seconds per question</small>
+                        </span>
+                        <input class="switch" type="checkbox" id="enableTimer" checked>
+                    </label>
+                    <label class="switch-row" for="showExplanations">
+                        <span class="switch-row-text">
+                            <strong>Explanations</strong>
+                            <small>Shown in the answer review</small>
+                        </span>
+                        <input class="switch" type="checkbox" id="showExplanations" checked>
+                    </label>
+                </div>
+            </div>
+
+            <div id="quizStatus" class="bc-status" style="display:none;" role="status" aria-live="polite"></div>
+
+            <div class="bc-setup-actions">
+                <span class="muted text-sm">Questions are written by your local Qwen model.</span>
+                <button type="submit" class="btn btn-primary btn-lg" id="generateQuizButton">
+                    <i class="bi bi-stars" aria-hidden="true"></i> Generate quiz
+                </button>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/brain_check.js') }}"></script>
+{% endblock %}

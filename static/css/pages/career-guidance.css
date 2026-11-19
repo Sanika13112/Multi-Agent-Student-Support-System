@@ -1,0 +1,84 @@
+/* Career Guidance: four-part profile form, then the analysis sheet. */
+
+.career-layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+    max-width: 56rem;
+}
+
+.career-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.career-submit {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--space-3);
+}
+
+.career-submit .career-status {
+    align-self: stretch;
+    margin-top: 0;
+}
+
+.career-result .sheet-body {
+    padding-top: var(--space-6);
+}
+
+.career-result-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    max-width: var(--reading-max);
+    font-family: var(--font-read);
+    font-size: var(--text-lg);
+    line-height: var(--leading-read);
+}
+
+.career-result-heading {
+    margin-top: var(--space-4);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--rule);
+    font-family: var(--font-ui);
+    font-size: var(--text-xl);
+    font-weight: 750;
+}
+
+.career-result-heading:first-child {
+    margin-top: 0;
+}
+
+.career-result-card {
+    padding: var(--space-4) var(--space-5);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-control);
+}
+
+.career-result-card h4 {
+    margin-bottom: var(--space-2);
+    font-family: var(--font-ui);
+    font-size: var(--text-lg);
+    font-weight: 700;
+}
+
+.career-result-card p {
+    color: var(--graphite);
+}
+
+.career-result-card ul {
+    padding-left: 1.2em;
+}
+
+.career-result-card li + li {
+    margin-top: var(--space-1);
+}
+
+@media (max-width: 640px) {
+    .career-submit {
+        align-items: stretch;
+    }
+}

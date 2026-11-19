@@ -1,0 +1,163 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Career Guidance{% endblock %}
+{% block body_class %}page-career{% endblock %}
+
+{% block page_title %}Career Guidance{% endblock %}
+{% block page_description %}Tell StudyMate about your branch, interests and skills. You'll get suitable career paths, the skills you're missing and a step-by-step learning plan.{% endblock %}
+
+{% set interests = [
+    ("Artificial Intelligence", "Artificial Intelligence"), ("Machine Learning", "Machine Learning"),
+    ("Data Science", "Data Science"), ("Web Development", "Web Development"),
+    ("Software Development", "Software Development"), ("Cybersecurity", "Cybersecurity"),
+    ("Cloud Computing", "Cloud Computing"), ("Research", "Research and innovation")
+] %}
+{% set skills = [
+    ("Python", "Python"), ("Java", "Java"), ("C++", "C++"), ("SQL", "SQL and DBMS"),
+    ("Machine Learning", "Machine Learning"), ("HTML CSS JavaScript", "HTML, CSS and JavaScript"),
+    ("Communication", "Communication"), ("Problem Solving", "Problem solving")
+] %}
+
+{% block content %}
+<div class="career-layout">
+    <form id="careerAssessmentForm" class="career-form" novalidate>
+
+        <section class="panel">
+            <div class="panel-header">
+                <span class="step-index" aria-hidden="true">1</span>
+                <div>
+                    <h2 class="panel-title">About you</h2>
+                    <p class="panel-description">Your academic background.</p>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="field span-2">
+                    <label class="field-label" for="studentName">Name<span class="required" aria-hidden="true">*</span></label>
+                    <input class="input" type="text" id="studentName" placeholder="Your name" autocomplete="name" required>
+                </div>
+                <div class="field">
+                    <label class="field-label" for="studentBranch">Branch<span class="required" aria-hidden="true">*</span></label>
+                    <select class="select" id="studentBranch" required>
+                        <option value="">Select branch</option>
+                        <option>AIML</option>
+                        <option>Computer Science</option>
+                        <option>Information Technology</option>
+                        <option>Electronics</option>
+                        <option>Mechanical</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="field-label" for="studentYear">Year<span class="required" aria-hidden="true">*</span></label>
+                    <select class="select" id="studentYear" required>
+                        <option value="">Select year</option>
+                        <option>First Year</option>
+                        <option>Second Year</option>
+                        <option>Third Year</option>
+                        <option>Final Year</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="field-label" for="studentCgpa">CGPA</label>
+                    <input class="input" type="number" id="studentCgpa" min="0" max="10" step="0.01" placeholder="e.g. 8.21" inputmode="decimal">
+                    <span class="field-hint">Optional, out of 10.</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <span class="step-index" aria-hidden="true">2</span>
+                <div>
+                    <h2 class="panel-title" id="interestsHeading">What interests you</h2>
+                    <p class="panel-description">Select all that apply.</p>
+                </div>
+            </div>
+            <div class="chip-group" role="group" aria-labelledby="interestsHeading">
+                {% for value, label in interests %}
+                <label class="chip-check"><input type="checkbox" name="interests" value="{{ value }}">{{ label }}</label>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <span class="step-index" aria-hidden="true">3</span>
+                <div>
+                    <h2 class="panel-title" id="skillsHeading">Skills you already have</h2>
+                    <p class="panel-description">Only pick what you can already use.</p>
+                </div>
+            </div>
+            <div class="chip-group" role="group" aria-labelledby="skillsHeading">
+                {% for value, label in skills %}
+                <label class="chip-check"><input type="checkbox" name="skills" value="{{ value }}">{{ label }}</label>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <span class="step-index" aria-hidden="true">4</span>
+                <div>
+                    <h2 class="panel-title">Your goal</h2>
+                    <p class="panel-description">Where you want to be after graduation.</p>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="field">
+                    <label class="field-label" for="careerGoal">Career goal<span class="required" aria-hidden="true">*</span></label>
+                    <select class="select" id="careerGoal" required>
+                        <option value="">Select your goal</option>
+                        <option>AI/ML Engineer</option>
+                        <option>Data Scientist</option>
+                        <option>Data Analyst</option>
+                        <option>Software Developer</option>
+                        <option>Java Full Stack Developer</option>
+                        <option>Web Developer</option>
+                        <option>Research Scientist</option>
+                        <option>Not Sure Yet</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="field-label" for="careerLevel">Preparing for</label>
+                    <select class="select" id="careerLevel">
+                        <option value="">Select level</option>
+                        <option>Internship</option>
+                        <option>Entry Level / Fresher</option>
+                        <option>Advanced Career Preparation</option>
+                        <option>Higher Studies / Research</option>
+                    </select>
+                </div>
+                <div class="field span-2">
+                    <label class="field-label" for="careerDescription">Anything else</label>
+                    <textarea class="textarea" id="careerDescription" rows="4"
+                              placeholder="Strengths, projects you've built, areas where you need guidance…"></textarea>
+                </div>
+            </div>
+        </section>
+
+        <div class="career-submit">
+            <div id="careerStatus" class="career-status" role="status" aria-live="polite"></div>
+            <button type="submit" class="btn btn-primary btn-lg" id="generateCareerButton">
+                <i class="bi bi-compass" aria-hidden="true"></i> Generate My Career Roadmap
+            </button>
+        </div>
+    </form>
+
+    <section class="sheet career-result" id="careerResult" style="display:none;" aria-labelledby="careerResultHeading">
+        <header class="sheet-header">
+            <div>
+                <h2 class="sheet-title" id="careerResultHeading">Your career analysis</h2>
+                <p class="sheet-subtitle">Based on the profile above. Use it as a starting point, not a guarantee.</p>
+            </div>
+        </header>
+        <div class="sheet-body">
+            <div id="careerResultContent" class="career-result-content"></div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/career_guidance.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,57 @@
+/* VoiceSnap: placeholder sheet shows until the transcript arrives. */
+
+.page-voice-snap .workspace-output:has(#voiceSnapTranscriptPanel:not([hidden])) .vs-placeholder {
+    display: none;
+}
+
+.page-voice-snap .sheet {
+    min-height: 0;
+}
+
+.page-voice-snap .vs-placeholder {
+    min-height: 26rem;
+}
+
+.step-inline {
+    display: inline-grid;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-right: var(--space-2);
+    font-size: var(--text-xs);
+    vertical-align: 0.1em;
+}
+
+.vs-transcript {
+    max-height: 28rem;
+    overflow-y: auto;
+    white-space: pre-wrap;
+}
+
+.vs-modes {
+    margin-bottom: var(--space-2);
+}
+
+.vs-modes .choice-title i {
+    color: var(--ink);
+    margin-right: var(--space-1);
+}
+
+.vs-notes:not(:empty) {
+    margin-top: var(--space-6);
+}
+
+.vs-download {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--rule);
+    color: var(--success);
+    font-weight: 600;
+}
+
+.page-voice-snap #voiceSnapAudioInfo:empty {
+    display: none;
+}

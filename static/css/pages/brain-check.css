@@ -1,0 +1,764 @@
+/* BrainCheck: setup, quiz, results, and the performance panels that
+   brain_check.js builds (formerly injected as inline CSS). */
+
+.bc-flow {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+/* ---------------- Setup ---------------- */
+
+.bc-setup {
+    padding: var(--space-6);
+}
+
+.bc-setup-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(15rem, 19rem);
+    gap: var(--space-8);
+}
+
+.bc-settings {
+    padding-left: var(--space-6);
+    border-left: 1px solid var(--rule);
+}
+
+.bc-settings .panel-title {
+    margin-bottom: var(--space-2);
+}
+
+.bc-setup-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-top: var(--space-6);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--rule);
+}
+
+/* ---------------- Quiz ---------------- */
+
+.bc-quiz-area,
+.bc-results-area {
+    min-height: 0;
+}
+
+.bc-timer {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-control);
+    font-variant-numeric: tabular-nums;
+}
+
+.bc-timer strong {
+    font-size: var(--text-lg);
+}
+
+.bc-timer .timer-warning,
+#timerDisplay.timer-warning {
+    color: var(--danger);
+}
+
+.bc-progress {
+    padding: var(--space-4) var(--space-6) 0;
+}
+
+.bc-progress-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--space-2);
+    color: var(--pencil);
+    font-size: var(--text-sm);
+}
+
+.bc-progress-labels strong {
+    color: var(--graphite);
+    font-variant-numeric: tabular-nums;
+}
+
+.bc-progress-track {
+    height: 6px;
+    border-radius: var(--radius-pill);
+    background: var(--sheet-sunken);
+    overflow: hidden;
+}
+
+.bc-progress-fill {
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--gradient);
+    box-shadow: 0 0 12px rgb(139 92 246 / 0.7);
+    transition: width 260ms var(--ease);
+}
+
+.bc-question-card {
+    max-width: var(--reading-max);
+}
+
+.bc-question-number {
+    display: block;
+    color: var(--pencil);
+    font-size: var(--text-sm);
+    font-weight: 600;
+}
+
+.bc-question-text {
+    margin: var(--space-2) 0 var(--space-6);
+    font-family: var(--font-read);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0;
+}
+
+.bc-options-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.bc-option {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-4);
+    width: 100%;
+    padding: var(--space-4);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-panel);
+    background: var(--sheet-sunken);
+    color: var(--graphite);
+    text-align: left;
+    transition: border-color var(--duration) var(--ease), background var(--duration) var(--ease);
+}
+
+.bc-option:hover {
+    border-color: var(--rule-strong);
+    background: var(--sheet-sunken);
+}
+
+.bc-option-letter {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 1.5px solid var(--rule-strong);
+    border-radius: 50%;
+    font-size: var(--text-sm);
+    font-weight: 700;
+}
+
+.bc-option-text {
+    padding-top: 0.15rem;
+    font-size: var(--text-md);
+    line-height: 1.5;
+}
+
+.bc-option.selected {
+    border-color: transparent;
+    background:
+        linear-gradient(var(--sheet-solid), var(--sheet-solid)) padding-box,
+        var(--gradient) border-box;
+    box-shadow: 0 10px 30px -12px rgb(124 58 237 / 0.6);
+}
+
+.bc-option.selected .bc-option-letter {
+    border-color: transparent;
+    background: var(--gradient);
+    color: #fff;
+    box-shadow: var(--glow);
+}
+
+.bc-quiz-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-6);
+    border-top: 1px solid var(--rule);
+}
+
+.bc-quiz-hint {
+    margin: 0 auto;
+    color: var(--pencil-soft);
+    font-size: var(--text-sm);
+}
+
+/* ---------------- Results ---------------- */
+
+.bc-score {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-8);
+    align-items: center;
+    padding-bottom: var(--space-6);
+    border-bottom: 1px solid var(--rule);
+}
+
+.bc-score-number {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-5) var(--space-6);
+    border: 1px solid rgb(167 139 250 / 0.35);
+    border-radius: 22px;
+    background: radial-gradient(circle at 50% 30%, rgb(124 58 237 / 0.35), transparent 70%), var(--sheet-sunken);
+    box-shadow: 0 0 50px -10px rgb(124 58 237 / 0.6);
+}
+
+.bc-score-number strong {
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-size: 3.25rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+}
+
+.bc-score-number span {
+    margin-top: var(--space-1);
+    color: var(--pencil);
+    font-size: var(--text-xs);
+}
+
+.bc-counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-6);
+    margin-top: var(--space-4);
+}
+
+.bc-counts div {
+    display: flex;
+    flex-direction: column-reverse;
+}
+
+.bc-counts dt {
+    color: var(--pencil);
+    font-size: var(--text-xs);
+}
+
+.bc-counts dd {
+    margin: 0;
+    font-size: var(--text-xl);
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+}
+
+.bc-review-title {
+    margin: var(--space-6) 0 var(--space-4);
+    font-size: var(--text-lg);
+}
+
+.bc-review-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.bc-review-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-panel);
+}
+
+.bc-review-card h4 {
+    font-family: var(--font-read);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    letter-spacing: 0;
+}
+
+.bc-review-card p {
+    color: var(--pencil);
+    font-size: var(--text-sm);
+}
+
+.bc-review-status {
+    align-self: flex-start;
+    padding: 0.15rem 0.6rem;
+    border-radius: var(--radius-pill);
+    font-size: var(--text-xs);
+    font-weight: 700;
+}
+
+.bc-review-status.correct {
+    background: var(--success-wash);
+    color: var(--success);
+}
+
+.bc-review-status.incorrect {
+    background: var(--danger-wash);
+    color: var(--danger);
+}
+
+.bc-review-status.unanswered {
+    background: var(--sheet-sunken);
+    color: var(--pencil);
+}
+
+.bc-explanation {
+    padding: var(--space-3);
+    border-left: 3px solid var(--highlighter);
+    background: var(--sheet-sunken);
+    color: var(--graphite) !important;
+    font-family: var(--font-read);
+    font-size: var(--text-md) !important;
+    line-height: 1.6;
+}
+
+.bc-results-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+}
+
+/* ---------------- Performance panels (built by brain_check.js) ---------------- */
+
+.bc-history-panel,
+.bc-study-plan-panel {
+    padding: var(--space-6);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-sheet);
+    background: var(--sheet);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow: var(--shadow-sheet);
+}
+
+.bc-section-label {
+    display: none; /* the panel headings already say what the section is */
+}
+
+.bc-history-heading h2,
+.bc-study-plan-header h2 {
+    font-size: var(--text-xl);
+    font-weight: 750;
+}
+
+.bc-history-heading p,
+.bc-study-plan-header p {
+    margin-top: 2px;
+    color: var(--pencil);
+    font-size: var(--text-sm);
+}
+
+.bc-history-heading:not(:first-child) {
+    margin-top: var(--space-8);
+}
+
+.bc-history-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+}
+
+.bc-history-stat {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    column-gap: var(--space-3);
+    align-items: center;
+    padding: var(--space-4);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-control);
+}
+
+.bc-history-stat i {
+    grid-row: span 2;
+    color: var(--tool);
+    font-size: 1.4rem;
+    filter: drop-shadow(0 0 8px var(--tool-glow));
+}
+
+.bc-history-stat strong {
+    font-size: var(--text-xl);
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+}
+
+.bc-history-stat span {
+    color: var(--pencil);
+    font-size: var(--text-xs);
+}
+
+.bc-performance-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+    margin: var(--space-5) 0 0;
+}
+
+.bc-performance-card {
+    min-width: 0;
+    padding: var(--space-5);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-panel);
+    background: var(--sheet-sunken);
+}
+
+.bc-performance-card h3 {
+    margin: 0 0 var(--space-4);
+    font-size: var(--text-md);
+    font-weight: 700;
+}
+
+.bc-topic-insights,
+.bc-study-recommendations {
+    margin-top: var(--space-4);
+}
+
+.bc-subject-row {
+    display: grid;
+    grid-template-columns: minmax(5rem, 1fr) 2fr 2.75rem;
+    align-items: center;
+    gap: var(--space-3);
+    margin: var(--space-3) 0;
+}
+
+.bc-subject-name {
+    color: var(--pencil);
+    font-size: var(--text-sm);
+    overflow-wrap: anywhere;
+}
+
+.bc-bar-track {
+    height: 8px;
+    overflow: hidden;
+    border-radius: var(--radius-pill);
+    background: var(--sheet-sunken);
+}
+
+.bc-bar-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--gradient);
+}
+
+.bc-subject-score {
+    font-size: var(--text-sm);
+    font-weight: 750;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.bc-trend-chart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    gap: var(--space-2);
+    height: 9rem;
+    padding: var(--space-2) var(--space-1) 0;
+    border-bottom: 1px solid var(--rule-strong);
+}
+
+.bc-trend-column {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-1);
+    min-width: 0;
+    height: 100%;
+}
+
+.bc-trend-value {
+    font-size: var(--text-xs);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.bc-trend-bar {
+    width: min(2rem, 70%);
+    min-height: 4px;
+    border-radius: 6px 6px 0 0;
+    background: linear-gradient(180deg, var(--accent-3), var(--accent-1));
+    box-shadow: 0 0 16px -2px rgb(139 92 246 / 0.6);
+}
+
+.bc-trend-label {
+    color: var(--pencil-soft);
+    font-size: var(--text-xs);
+}
+
+.bc-topic-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--rule);
+}
+
+.bc-topic-row:last-child {
+    border-bottom: 0;
+}
+
+.bc-topic-details {
+    display: grid;
+    gap: 2px;
+}
+
+.bc-topic-details strong {
+    font-size: var(--text-md);
+}
+
+.bc-topic-details span {
+    color: var(--pencil);
+    font-size: var(--text-xs);
+}
+
+.bc-topic-badge {
+    padding: 0.2rem 0.65rem;
+    border-radius: var(--radius-pill);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.bc-topic-badge.weak,
+.bc-topic-analysis.weak {
+    background: var(--danger-wash);
+    color: var(--danger);
+}
+
+.bc-topic-badge.average,
+.bc-topic-analysis.average {
+    background: var(--warning-wash);
+    color: var(--warning);
+}
+
+.bc-topic-badge.strong,
+.bc-topic-analysis.strong {
+    background: var(--success-wash);
+    color: var(--success);
+}
+
+.bc-recommendation-item {
+    padding: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-2);
+    border-left: 3px solid var(--highlighter);
+    background: var(--sheet-sunken);
+}
+
+.bc-recommendation-item strong {
+    font-size: var(--text-sm);
+}
+
+.bc-recommendation-item p {
+    margin-top: var(--space-1);
+    color: var(--pencil);
+    font-size: var(--text-sm);
+    line-height: 1.6;
+}
+
+.bc-history-list {
+    display: flex;
+    flex-direction: column;
+    margin-top: var(--space-4);
+    border-top: 1px solid var(--rule);
+}
+
+.bc-history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--rule);
+}
+
+.bc-history-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.bc-history-details span {
+    color: var(--pencil);
+    font-size: var(--text-xs);
+}
+
+.bc-history-score-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-shrink: 0;
+}
+
+.bc-history-score {
+    font-size: var(--text-lg);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.bc-history-score-wrap small {
+    color: var(--pencil);
+    font-size: var(--text-xs);
+}
+
+.bc-history-empty {
+    padding: var(--space-5);
+    border: 1px dashed var(--rule-strong);
+    border-radius: var(--radius-control);
+    color: var(--pencil);
+    font-size: var(--text-sm);
+    line-height: 1.6;
+    text-align: center;
+}
+
+/* Study plan panel */
+
+.bc-study-plan-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-4);
+}
+
+.bc-study-plan-button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 2.5rem;
+    padding: 0 var(--space-4);
+    border: 0;
+    border-radius: var(--radius-control);
+    background: var(--gradient);
+    box-shadow: var(--glow);
+    color: #fff;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.bc-study-plan-button:hover:not(:disabled) {
+    box-shadow: var(--glow-strong);
+}
+
+.bc-study-plan-button:disabled {
+    opacity: 0.5;
+}
+
+.bc-study-plan-analysis {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+}
+
+.bc-study-plan-analysis:empty {
+    display: none;
+}
+
+.bc-topic-analysis {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-control);
+    font-size: var(--text-sm);
+}
+
+.bc-study-plan-content:not(:empty) {
+    margin-top: var(--space-5);
+}
+
+.bc-study-plan-content h3 {
+    margin-bottom: var(--space-3);
+    font-size: var(--text-lg);
+}
+
+.bc-study-plan-text {
+    max-width: var(--reading-max);
+    color: var(--graphite);
+    font-family: var(--font-read);
+    font-size: var(--text-lg);
+    line-height: var(--leading-read);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+/* ---------------- Responsive ---------------- */
+
+@media (max-width: 960px) {
+    .bc-setup-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-6);
+    }
+
+    .bc-settings {
+        padding-left: 0;
+        padding-top: var(--space-5);
+        border-left: 0;
+        border-top: 1px solid var(--rule);
+    }
+
+    .bc-performance-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .bc-setup {
+        padding: var(--space-4);
+    }
+
+    .bc-setup-actions,
+    .bc-study-plan-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .bc-history-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .bc-score {
+        grid-template-columns: 1fr;
+        gap: var(--space-4);
+    }
+
+    .bc-score-number {
+        align-self: flex-start;
+    }
+
+    .bc-quiz-nav {
+        flex-wrap: wrap;
+    }
+
+    .bc-quiz-hint {
+        order: -1;
+        width: 100%;
+        margin: 0;
+    }
+
+    .bc-progress,
+    .bc-quiz-nav {
+        padding-left: var(--space-4);
+        padding-right: var(--space-4);
+    }
+
+    .bc-subject-row {
+        grid-template-columns: 5.25rem 1fr 2.5rem;
+    }
+
+    .bc-history-panel,
+    .bc-study-plan-panel {
+        padding: var(--space-4);
+    }
+}

@@ -1,0 +1,180 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Notice Translator{% endblock %}
+{% block body_class %}page-notice-translator{% endblock %}
+
+{% block page_title %}Notice Translator{% endblock %}
+{% block page_description %}
+Extract text from college notice images and identify their language automatically.
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='css/pages/notice_translator.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="nt-workspace">
+
+    <section class="panel nt-upload-panel">
+        <div class="panel-heading">
+            <h2 class="panel-title">Upload a notice</h2>
+            <p class="panel-description">
+                Upload a clear JPG, JPEG or PNG image. Maximum size: 10 MB.
+            </p>
+        </div>
+
+        <label class="nt-dropzone" for="noticeImage">
+            <i class="bi bi-cloud-arrow-up"></i>
+            <strong>Choose a notice image</strong>
+            <span>Click here to browse your files</span>
+            <small>JPG · JPEG · PNG</small>
+        </label>
+
+        <input type="file"
+               id="noticeImage"
+               accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+               hidden>
+
+        <div class="nt-file-info" id="fileInfo" hidden>
+            <i class="bi bi-file-earmark-image"></i>
+            <span id="fileName"></span>
+            <button type="button" id="removeFile" aria-label="Remove image">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="nt-preview" id="imagePreview" hidden>
+            <img id="previewImage" alt="Selected notice preview">
+        </div>
+
+        <button class="btn btn-primary btn-block"
+                type="button"
+                id="processButton"
+                disabled>
+            <i class="bi bi-scan"></i>
+            Extract Text and Detect Language
+        </button>
+
+        <p class="nt-status" id="statusMessage"
+           role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="panel nt-language-panel">
+        <h2 class="panel-title">Language detection</h2>
+        <p class="panel-description">
+            The source language will be detected automatically after OCR.
+        </p>
+
+        <div class="nt-language-result" id="languageResult">
+            <i class="bi bi-translate"></i>
+            <span>Waiting for notice processing</span>
+        </div>
+
+        <div class="nt-language-details" id="languageDetails" hidden>
+            <div>
+                <span>Primary language</span>
+                <strong id="primaryLanguage">—</strong>
+            </div>
+            <div>
+                <span>Detection confidence</span>
+                <strong id="languageConfidence">—</strong>
+            </div>
+            <div>
+                <span>Notice type</span>
+                <strong id="mixedLanguage">—</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="sheet nt-output-sheet">
+        <header class="sheet-header">
+            <div>
+                <h2 class="sheet-title">Extracted notice text</h2>
+                <p class="sheet-subtitle">
+                    Review and edit the text extracted from your image.
+                </p>
+            </div>
+
+            <button type="button"
+                    class="btn btn-secondary"
+                    id="downloadText"
+                    disabled>
+                <i class="bi bi-download"></i> Download
+            </button>
+        </header>
+
+        <div class="sheet-body">
+            <textarea id="extractedText"
+                      class="nt-textarea"
+                      placeholder="Your extracted notice text will appear here..."
+                      spellcheck="false"></textarea>
+        </div>
+    </section>
+
+   <section class="panel nt-translation-panel">
+    <h2 class="panel-title">Translate notice</h2>
+
+    <p class="panel-description">
+        Translate your extracted notice into your preferred language.
+    </p>
+
+    <div class="nt-language-details">
+        <div>
+            <label for="sourceLanguage">Source language</label>
+            <select id="sourceLanguage" class="nt-select">
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+                <option value="mr">Marathi</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="targetLanguage">Translate into</label>
+            <select id="targetLanguage" class="nt-select">
+                <option value="hi">Hindi</option>
+                <option value="mr">Marathi</option>
+                <option value="en">English</option>
+            </select>
+        </div>
+    </div>
+
+    <button type="button"
+            class="btn btn-primary btn-block"
+            id="translateButton"
+            disabled>
+        <i class="bi bi-translate"></i>
+        Translate Notice
+    </button>
+
+    <p class="nt-status" id="translationStatus"
+       role="status" aria-live="polite"></p>
+
+    <div class="nt-translation-output"
+         id="translationOutput">
+        Your translated notice will appear here.
+    </div>
+
+    <div class="nt-translation-actions">
+        <button type="button"
+                class="btn btn-secondary"
+                id="copyTranslation"
+                disabled>
+            <i class="bi bi-copy"></i> Copy
+        </button>
+
+        <button type="button"
+                class="btn btn-secondary"
+                id="downloadTranslation"
+                disabled>
+            <i class="bi bi-download"></i> Download translation
+        </button>
+    </div>
+</section>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/notice_translator.js') }}"></script>
+{% endblock %}

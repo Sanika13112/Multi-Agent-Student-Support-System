@@ -1,0 +1,75 @@
+{% extends "layouts/app.html" %}
+{% import "macros/ui.html" as ui %}
+
+{% block title %}AskAway{% endblock %}
+{% block body_class %}page-ask-away{% endblock %}
+
+{% block page_title %}AskAway{% endblock %}
+{% block page_description %}Upload your study material and ask questions about it. Every answer comes from your document and lists the pages it used.{% endblock %}
+
+{% block content %}
+<div class="workspace">
+    <div class="workspace-controls">
+        <section class="panel">
+            {{ ui.panel_header("Your document", "PDF or TXT, up to 20 MB. One document at a time.") }}
+
+            {% call ui.dropzone("documentInput", "Upload a document", "Click to browse your files", "PDF or TXT", icon="file-earmark-arrow-up") %}
+                <input type="file" id="documentInput" accept=".pdf,.txt" hidden>
+            {% endcall %}
+
+            <div class="document-status" id="documentStatus" role="status" aria-live="polite">No document uploaded yet.</div>
+
+            <div class="document-card" id="documentInfo" hidden>
+                <div class="document-card-name">
+                    <i class="bi bi-file-earmark-check" aria-hidden="true"></i>
+                    <strong id="documentName">Document name</strong>
+                </div>
+                <div class="document-card-details" id="documentDetails"></div>
+                <button type="button" class="btn btn-danger btn-sm" id="resetDocumentButton">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i> Remove document
+                </button>
+            </div>
+        </section>
+
+        <section class="panel ask-tips">
+            <h2 class="panel-title">Getting good answers</h2>
+            <ul>
+                <li>Ask about one idea at a time.</li>
+                <li>Use the terms your notes use.</li>
+                <li>Open <em>Sources used</em> under an answer to read the exact passage.</li>
+            </ul>
+        </section>
+    </div>
+
+    <section class="chat" aria-labelledby="askHeading">
+        <header class="chat-header">
+            <div>
+                <h2 class="sheet-title" id="askHeading">Questions about your document</h2>
+                <p class="sheet-subtitle">Answered by your local Qwen model</p>
+            </div>
+        </header>
+
+        <div class="chat-log" id="chatMessages" role="log" aria-live="polite">
+            {{ ui.empty_state(
+                "Upload a document to start",
+                "Then ask something like: “Explain the important concepts in this document.”",
+                id="welcomeMessage"
+            ) }}
+        </div>
+
+        <form class="chat-composer" id="askAwayForm">
+            <label class="visually-hidden" for="questionInput">Your question</label>
+            <input type="text" class="input" id="questionInput"
+                   placeholder="Upload a document to start asking…" autocomplete="off" disabled required>
+            <button type="submit" class="btn btn-primary" id="sendQuestionButton" disabled>
+                <i class="bi bi-send" aria-hidden="true"></i> Ask
+            </button>
+        </form>
+        <div class="chat-note" id="chatStatus" role="status" aria-live="polite"></div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/ask_away.js') }}"></script>
+{% endblock %}

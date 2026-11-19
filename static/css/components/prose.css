@@ -1,0 +1,168 @@
+/* Prose: AI-generated study material (notes, transcripts, career analysis).
+   Set in a reading serif so it feels like a textbook page. */
+
+.prose {
+    max-width: var(--reading-max);
+    color: var(--graphite);
+    font-family: var(--font-read);
+    font-size: var(--text-lg);
+    line-height: var(--leading-read);
+    overflow-wrap: anywhere;
+}
+
+.prose > * + * {
+    margin-top: 0.9em;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+    font-family: var(--font-ui);
+    letter-spacing: -0.015em;
+}
+
+.prose h1 {
+    font-size: var(--text-2xl);
+    font-weight: 800;
+    line-height: 1.15;
+    background: linear-gradient(100deg, var(--graphite) 40%, var(--ink));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.prose h2 {
+    margin-top: 1.8em;
+    padding-bottom: 0.35em;
+    border-bottom: 1px solid transparent;
+    border-image: linear-gradient(90deg, rgb(139 92 246 / 0.6), transparent 70%) 1;
+    font-size: var(--text-xl);
+}
+
+.prose h3 {
+    margin-top: 1.4em;
+    font-size: var(--text-lg);
+}
+
+.prose h4 {
+    margin-top: 1.2em;
+    font-size: var(--text-md);
+}
+
+.prose :is(h1, h2, h3, h4) + * {
+    margin-top: 0.5em;
+}
+
+.prose ul,
+.prose ol {
+    padding-left: 1.4em;
+}
+
+.prose li + li {
+    margin-top: 0.35em;
+}
+
+.prose li::marker {
+    color: var(--ink);
+}
+
+/* Key terms get a low highlighter stroke, like a student's notes. */
+.prose strong {
+    font-weight: 700;
+    color: var(--graphite);
+    background: linear-gradient(transparent 64%, color-mix(in srgb, var(--highlighter) 38%, transparent) 64%);
+}
+
+.prose mark {
+    padding: 0 0.15em;
+    background: var(--highlighter);
+    color: var(--on-highlighter);
+}
+
+.prose a {
+    color: var(--ink);
+}
+
+.prose blockquote {
+    padding: 0.2em 0 0.2em 1em;
+    border-left: 3px solid var(--rule-strong);
+    color: var(--pencil);
+    font-style: italic;
+}
+
+.prose code {
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+    background: var(--sheet-sunken);
+    font-size: 0.85em;
+}
+
+.prose pre {
+    padding: var(--space-4);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-control);
+    background: var(--sheet-sunken);
+    overflow-x: auto;
+    font-size: var(--text-sm);
+    line-height: 1.55;
+}
+
+.prose pre code {
+    padding: 0;
+    background: none;
+}
+
+.prose table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-ui);
+    font-size: var(--text-sm);
+}
+
+.prose th,
+.prose td {
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--rule);
+    text-align: left;
+    vertical-align: top;
+}
+
+.prose th {
+    background: var(--sheet-sunken);
+    font-weight: 650;
+}
+
+.prose hr {
+    height: 1px;
+    border: 0;
+    background: var(--rule);
+}
+
+.prose img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-control);
+}
+
+.prose .mermaid {
+    padding: var(--space-4);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-control);
+    background: var(--sheet-sunken);
+    overflow-x: auto;
+    text-align: center;
+}
+
+.prose .mermaid svg {
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+}
+
+@media (max-width: 860px) {
+    .prose {
+        font-size: var(--text-md);
+    }
+}

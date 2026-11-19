@@ -1,0 +1,88 @@
+
+{#
+    StudyMate AI — navigation (single source of truth)
+#}
+
+{% set NAVIGATION = [
+    {
+        "title": "Study",
+        "items": [
+            {"label": "Dashboard", "accent": "violet", "path": "/", "icon": "house"},
+            {
+                "label": "AI Assistant",
+                "accent": "violet",
+                "path": "/assistant",
+                "icon": "chat-left-text",
+                "summary": "Ask about any concept, a career roadmap or interview questions.",
+                "works_with": "Your question"
+            }
+        ]
+    },
+    {
+        "title": "Study tools",
+        "items": [
+            {
+                "label": "QuickNotes",
+                "accent": "indigo",
+                "path": "/quick-notes",
+                "icon": "journal-text",
+                "summary": "Turn a PDF or text file into structured revision notes.",
+                "works_with": "PDF or TXT"
+            },
+            {
+                "label": "VoiceSnap",
+                "accent": "pink",
+                "path": "/voice-snap",
+                "icon": "mic",
+                "summary": "Transcribe a lecture recording and turn it into notes.",
+                "works_with": "Audio recording"
+            },
+            {
+                "label": "AskAway",
+                "accent": "cyan",
+                "path": "/ask-away",
+                "icon": "file-earmark-text",
+                "summary": "Ask questions about your document and see the pages each answer came from.",
+                "works_with": "PDF or TXT"
+            },
+            {
+                "label": "BrainCheck",
+                "accent": "amber",
+                "path": "/brain-check",
+                "icon": "patch-question",
+                "summary": "Practise with generated MCQs and track your scores by topic.",
+                "works_with": "Subject and topic"
+            },
+            {
+                "label": "Notice Translator",
+                "accent": "cyan",
+                "path": "/notice-translator",
+                "icon": "translate",
+                "summary": "Extract text from college notices and translate it into English, Hindi or Marathi.",
+                "works_with": "JPG, JPEG or PNG image"
+            }
+        ]
+    },
+    {
+        "title": "Plan ahead",
+        "items": [
+            {
+                "label": "Career Guidance",
+                "accent": "emerald",
+                "path": "/career-guidance",
+                "icon": "compass",
+                "summary": "Get career paths, skill gaps and a learning roadmap for your profile.",
+                "works_with": "Your profile"
+            }
+        ]
+    }
+] %}
+
+{# Lookup by URL, used by the layout for the page icon and accent colour. #}
+{% set NAV_BY_PATH = {} %}
+
+{% for group in NAVIGATION %}
+    {% for item in group["items"] %}
+        {% set _ = NAV_BY_PATH.update({item["path"]: item}) %}
+    {% endfor %}
+{% endfor %}

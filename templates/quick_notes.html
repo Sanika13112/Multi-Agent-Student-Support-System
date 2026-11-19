@@ -1,0 +1,107 @@
+{% extends "layouts/app.html" %}
+{% import "macros/ui.html" as ui %}
+
+{% block title %}QuickNotes{% endblock %}
+{% block body_class %}page-quick-notes{% endblock %}
+
+{% block page_title %}QuickNotes{% endblock %}
+{% block page_description %}Turn a PDF or text file into structured revision notes, with diagrams from the document where it has them.{% endblock %}
+
+{% block content %}
+<div class="workspace">
+    <div class="workspace-controls">
+
+        <section class="panel">
+            {{ ui.panel_header("Upload a document", "PDF or TXT, up to 20 MB.", step=1) }}
+            {% call ui.dropzone("documentInput", "Choose a document", "Click to browse your files", "PDF or TXT", icon="file-earmark-arrow-up") %}{% endcall %}
+            <input type="file" id="documentInput" accept=".pdf,.txt,application/pdf,text/plain" hidden>
+            <div class="file-chip" id="selectedFile">
+                <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+                <span>No document selected</span>
+            </div>
+        </section>
+
+        <section class="panel">
+            {{ ui.panel_header("Choose a note style", step=2) }}
+            <div class="choice-list" role="radiogroup" aria-label="Note style">
+                <label class="choice qn-mode-option selected">
+                    <input type="radio" name="notesMode" value="quick" checked>
+                    <span class="choice-mark" aria-hidden="true"></span>
+                    <span class="choice-body">
+                        <span class="choice-title">Quick notes</span>
+                        <span class="choice-text">Fast. Organises the document's own text without calling the AI model.</span>
+                    </span>
+                </label>
+                <label class="choice qn-mode-option">
+                    <input type="radio" name="notesMode" value="detailed">
+                    <span class="choice-mark" aria-hidden="true"></span>
+                    <span class="choice-body">
+                        <span class="choice-title">Detailed AI notes</span>
+                        <span class="choice-text">Explanations written by your local Qwen model. Takes longer.</span>
+                    </span>
+                </label>
+            </div>
+        </section>
+
+        <section class="panel">
+            {{ ui.panel_header("Generate", step=3) }}
+            <button type="button" class="btn btn-primary btn-lg btn-block" id="generateButton" disabled>
+                <i class="bi bi-stars" aria-hidden="true"></i> Generate Study Notes
+            </button>
+            <div class="qn-status-message" id="statusMessage" role="status" aria-live="polite"></div>
+        </section>
+
+        <section class="panel">
+            <h2 class="panel-title">Document details</h2>
+            <p class="panel-description qn-document-empty">Details appear after the notes are generated.</p>
+            <div id="documentInfo" class="document-summary" hidden>
+                <div class="document-summary-name">
+                    <strong id="fileName">Document</strong>
+                    <span id="fileType">PDF document</span>
+                </div>
+                <div class="meta-grid">
+                    {{ ui.meta_item("Pages", "pageCount", "0") }}
+                    {{ ui.meta_item("File size", "fileSize", "0 KB") }}
+                    {{ ui.meta_item("Made with", "modelName", "Python") }}
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="workspace-output">
+        <section class="sheet" aria-labelledby="notesHeading">
+            <header class="sheet-header">
+                <div>
+                    <h2 class="sheet-title" id="notesHeading">Study notes</h2>
+                    <p class="sheet-subtitle">Download them as a Markdown file when they're ready.</p>
+                </div>
+                <button type="button" class="btn btn-secondary" id="downloadButton" disabled>
+                    <i class="bi bi-download" aria-hidden="true"></i> Download
+                </button>
+            </header>
+
+            <div class="sheet-body" id="notesContainer">
+                {{ ui.empty_state(
+                    "Your notes will be written here",
+                    "Upload a document, pick a note style, then generate. You'll get:",
+                    ["Sections that follow the document's structure", "Key terms and definitions", "Diagrams found in the document"],
+                    extra_class="qn-notes-empty"
+                ) }}
+                <div class="prose" id="notesContent" data-render-diagrams></div>
+            </div>
+
+            <footer class="sheet-footer">
+                <span>Check generated notes against your textbook before exams.</span>
+            </footer>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/js/marked.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/js/purify.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/js/mermaid.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/core/diagrams.js') }}"></script>
+<script src="{{ url_for('static', filename='js/quick_notes.js') }}"></script>
+{% endblock %}

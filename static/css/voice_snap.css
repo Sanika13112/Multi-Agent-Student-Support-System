@@ -1,0 +1,792 @@
+/* =========================================================
+   StudyMate AI — VoiceSnap
+   Page-specific styles. Safe to use alongside style.css.
+   ========================================================= */
+
+:root {
+  --vs-ink: #292344;
+  --vs-muted: #77758c;
+  --vs-purple: #8064d8;
+  --vs-purple-dark: #6d51c6;
+  --vs-line: #e9e6f3;
+  --vs-surface: #ffffff;
+  --vs-page: #f7f7fc;
+}
+
+body {
+  margin: 0;
+  background: var(--vs-page);
+  color: var(--vs-ink);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.vs-page {
+  min-height: 100vh;
+  background: var(--vs-page);
+}
+
+.vs-page *,
+.vs-page *::before,
+.vs-page *::after {
+  box-sizing: border-box;
+}
+
+.vs-topbar {
+  height: 76px;
+  max-width: 1240px;
+  padding: 0 28px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vs-brand {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  color: var(--vs-ink);
+  text-decoration: none;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -.5px;
+}
+
+.vs-brand:hover {
+  color: var(--vs-ink);
+}
+
+.vs-brand b {
+  color: var(--vs-purple);
+}
+
+.vs-brand-mark {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(140deg, #9b83ee, #7055ce);
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(128, 100, 216, .2);
+}
+
+.vs-back-link {
+  display: inline-flex;
+  gap: 9px;
+  align-items: center;
+  padding: 10px 15px;
+  color: #68657b;
+  background: #fff;
+  border: 1px solid #dedbea;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  transition: .2s ease;
+}
+
+.vs-back-link:hover {
+  color: var(--vs-purple-dark);
+  border-color: #b9a9ec;
+  background: #fbfaff;
+}
+
+.vs-main {
+  width: 100%;
+  max-width: 1184px;
+  margin: 0 auto;
+  padding: 20px 24px 34px;
+}
+
+/* Hero */
+
+.vs-hero {
+  min-height: 270px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  padding: 36px 48px;
+  background: linear-gradient(115deg, #fff 0%, #f4f0ff 58%, #eee9ff 100%);
+  border: 1px solid #e7e0fa;
+  border-radius: 24px;
+  box-shadow: 0 8px 28px rgba(50, 36, 100, .045);
+}
+
+.vs-hero-copy {
+  max-width: 650px;
+  position: relative;
+  z-index: 2;
+}
+
+.vs-eyebrow,
+.vs-step-kicker,
+.vs-step-label {
+  color: #876bdc;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .16em;
+}
+
+.vs-live-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin: 0 7px 1px 0;
+  background: #55bf91;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(85, 191, 145, .12);
+}
+
+.vs-hero h1 {
+  margin: 13px 0 12px;
+  color: #292344;
+  font-size: clamp(34px, 4vw, 49px);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -2px;
+}
+
+.vs-hero h1 span {
+  color: var(--vs-purple);
+}
+
+.vs-hero-copy p {
+  max-width: 590px;
+  margin: 0;
+  color: var(--vs-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.vs-hero-points {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 22px;
+  color: #625d78;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.vs-hero-points i {
+  margin-right: 5px;
+  color: var(--vs-purple);
+}
+
+.vs-hero-art {
+  width: 270px;
+  height: 220px;
+  flex: 0 0 270px;
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.vs-orbit {
+  position: absolute;
+  border: 1px solid #cfc3f5;
+  border-radius: 50%;
+  transform: rotate(-25deg);
+}
+
+.vs-orbit-one {
+  width: 210px;
+  height: 145px;
+}
+
+.vs-orbit-two {
+  width: 245px;
+  height: 185px;
+  border-color: #ddd5f7;
+  transform: rotate(35deg);
+}
+
+.vs-mic-circle {
+  width: 105px;
+  height: 105px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(145deg, #a28bed, #7156d0);
+  border-radius: 32px;
+  box-shadow: 0 18px 36px rgba(128, 100, 216, .3);
+  font-size: 42px;
+  transform: rotate(-8deg);
+}
+
+.vs-float-chip {
+  position: absolute;
+  z-index: 2;
+  padding: 9px 12px;
+  color: #51466e;
+  background: #fff;
+  border: 1px solid #eee9fa;
+  border-radius: 11px;
+  box-shadow: 0 8px 22px rgba(53, 35, 106, .07);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.vs-float-chip i {
+  margin-right: 5px;
+  color: var(--vs-purple);
+}
+
+.chip-transcript {
+  top: 25px;
+  right: 0;
+}
+
+.chip-ai {
+  bottom: 25px;
+  left: 0;
+}
+
+/* Workflow heading and cards */
+
+.vs-step-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  margin: 32px 2px 15px;
+}
+
+.vs-step-heading h2 {
+  margin: 5px 0 0;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -.5px;
+}
+
+.vs-step-caption {
+  padding-bottom: 3px;
+  color: #9793a7;
+  font-size: 12px;
+}
+
+.vs-upload-card,
+.vs-result-card {
+  min-width: 0;
+  padding: 25px;
+  background: var(--vs-surface);
+  border: 1px solid var(--vs-line);
+  border-radius: 19px;
+  box-shadow: 0 5px 22px rgba(40, 30, 80, .035);
+}
+
+.vs-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.vs-step-icon {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  display: grid;
+  place-items: center;
+  color: #8064d8;
+  background: #f0ebff;
+  border-radius: 13px;
+  font-size: 20px;
+}
+
+.vs-step-icon.blue {
+  color: #5489d8;
+  background: #edf4ff;
+}
+
+.vs-step-icon.violet {
+  color: #8064d8;
+  background: #f0ebff;
+}
+
+.vs-card-heading h2 {
+  margin: 3px 0;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.vs-card-heading p {
+  margin: 0;
+  color: #858197;
+  font-size: 12px;
+}
+
+.vs-card-number {
+  margin-left: auto;
+  color: #e8e4f1;
+  font-size: 30px;
+  font-weight: 800;
+}
+
+/* Audio upload */
+
+.vs-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 25px 18px;
+  background: #fbfaff;
+  border: 1.5px dashed #c9bdf0;
+  border-radius: 15px;
+  cursor: pointer;
+  text-align: center;
+  transition: .2s ease;
+}
+
+.vs-dropzone:hover {
+  background: #f5f1ff;
+  border-color: #8c70e1;
+  transform: translateY(-1px);
+}
+
+.vs-dropzone input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.vs-upload-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 3px;
+  color: #8064d8;
+  background: #eee9ff;
+  border-radius: 15px;
+  font-size: 23px;
+}
+
+.vs-dropzone strong {
+  font-size: 14px;
+}
+
+.vs-drop-subtitle {
+  color: #8b879c;
+  font-size: 12px;
+}
+
+.vs-file-types {
+  color: #aaa5b8;
+  font-size: 10px;
+  letter-spacing: .05em;
+}
+
+.vs-browse-button {
+  margin-top: 5px;
+  padding: 8px 13px;
+  color: #7055ca;
+  background: #fff;
+  border: 1px solid #dcd3f6;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.vs-file-info {
+  min-height: 20px;
+  margin-top: 10px;
+  color: #9691a5;
+  font-size: 11px;
+}
+
+.vs-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.vs-privacy-note {
+  color: #8d899e;
+  font-size: 11px;
+}
+
+.vs-privacy-note i {
+  margin-right: 5px;
+  color: #54a982;
+}
+
+.vs-primary-button,
+.vs-download-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 12px 17px;
+  color: #fff;
+  background: linear-gradient(110deg, #876be0, #7054cb);
+  border: 0;
+  border-radius: 10px;
+  box-shadow: 0 7px 16px rgba(128, 100, 216, .17);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 700;
+  transition: .2s ease;
+}
+
+.vs-primary-button:hover,
+.vs-download-button:hover {
+  color: #fff;
+  background: linear-gradient(110deg, #765bd2, #6247bc);
+  transform: translateY(-1px);
+}
+
+.vs-primary-button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Status messages */
+
+.vs-page .status {
+  min-height: 0;
+  font-size: 12px;
+}
+
+.vs-page .status:empty {
+  display: none;
+}
+
+.vs-page .status.success {
+  color: #198754;
+}
+
+.vs-page .status.error {
+  color: #dc3545;
+}
+
+.vs-page .status.info {
+  color: #6c5bb3;
+}
+
+/* Transcript and notes */
+
+.vs-result-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.vs-result-card {
+  min-width: 0;
+}
+
+.vs-card-heading.compact {
+  align-items: flex-start;
+}
+
+.vs-language-pill {
+  margin-left: auto;
+  padding: 6px 9px;
+  color: #5b75ad;
+  background: #eff4ff;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.vs-transcript {
+  max-height: 430px;
+  overflow: auto;
+  padding: 16px;
+  color: #514d63;
+  background: #faf9fd;
+  border: 1px solid #eeeaf6;
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.vs-note-options {
+  display: grid;
+  gap: 10px;
+}
+
+.vs-note-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px;
+  color: var(--vs-ink);
+  background: #fff;
+  border: 1px solid #e8e4f0;
+  border-radius: 12px;
+  text-align: left;
+  transition: .18s ease;
+}
+
+.vs-note-option:hover {
+  background: #fbf9ff;
+  border-color: #b9a8ed;
+  transform: translateY(-1px);
+}
+
+.vs-note-option.featured {
+  background: #faf8ff;
+  border-color: #cfc2f4;
+}
+
+.vs-option-icon {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  display: grid;
+  place-items: center;
+  color: #8064d8;
+  background: #eee9ff;
+  border-radius: 10px;
+  font-size: 17px;
+}
+
+.vs-option-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.vs-option-copy strong {
+  font-size: 12px;
+}
+
+.vs-option-copy small {
+  color: #888399;
+  font-size: 10px;
+}
+
+.vs-option-copy em {
+  align-self: flex-start;
+  padding: 3px 6px;
+  color: #765bd0;
+  background: #eee9ff;
+  border-radius: 5px;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: .06em;
+}
+
+.option-arrow {
+  margin-left: auto;
+  color: #9a8bc6;
+}
+
+.vs-notes-output {
+  margin-top: 14px;
+  padding: 15px;
+  color: #514d63;
+  background: #fcfbff;
+  border: 1px solid #eeeaf6;
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+.vs-notes-output:empty {
+  display: none;
+}
+
+.vs-notes-output h1,
+.vs-notes-output h2,
+.vs-notes-output h3 {
+  margin-top: 1em;
+  color: #42366a;
+  font-weight: 800;
+}
+
+.vs-notes-output h1 { font-size: 19px; }
+.vs-notes-output h2 { font-size: 16px; }
+.vs-notes-output h3 { font-size: 14px; }
+
+.vs-notes-output p {
+  margin-bottom: .7em;
+}
+
+.vs-notes-output ul,
+.vs-notes-output ol {
+  padding-left: 20px;
+}
+
+.vs-notes-output code {
+  padding: 2px 4px;
+  background: #f0ecf8;
+  border-radius: 4px;
+}
+
+.vs-download-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 14px;
+}
+
+.vs-download-row > span {
+  color: #299467;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.vs-download-row > span i {
+  margin-right: 5px;
+}
+
+.vs-download-button {
+  padding: 9px 12px;
+  font-size: 11px;
+}
+
+/* Footer and visibility */
+
+.vs-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 26px;
+  padding: 16px 2px 0;
+  color: #9a96a8;
+  border-top: 1px solid #eae7f1;
+  font-size: 10px;
+}
+
+.vs-footer button {
+  padding: 4px 0;
+  color: #a06b78;
+  background: transparent;
+  border: 0;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.vs-footer button:hover {
+  color: #c34f68;
+}
+
+.vs-page [hidden] {
+  display: none !important;
+}
+
+/* Responsive */
+
+@media (max-width: 850px) {
+  .vs-hero {
+    padding: 30px;
+  }
+
+  .vs-hero-art {
+    width: 210px;
+    flex-basis: 210px;
+    transform: scale(.85);
+  }
+
+  .vs-result-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .vs-topbar {
+    height: 65px;
+    padding: 0 16px;
+  }
+
+  .vs-main {
+    padding: 12px 13px 24px;
+  }
+
+  .vs-hero {
+    min-height: 0;
+    padding: 25px 21px;
+  }
+
+  .vs-hero-art {
+    display: none;
+  }
+
+  .vs-hero h1 {
+    font-size: 35px;
+    letter-spacing: -1.5px;
+  }
+
+  .vs-hero-copy p {
+    font-size: 13px;
+  }
+
+  .vs-hero-points {
+    gap: 10px 14px;
+    font-size: 10px;
+  }
+
+  .vs-step-heading {
+    margin-top: 25px;
+  }
+
+  .vs-step-heading h2 {
+    font-size: 18px;
+  }
+
+  .vs-step-caption {
+    display: none;
+  }
+
+  .vs-upload-card,
+  .vs-result-card {
+    padding: 17px;
+  }
+
+  .vs-card-heading {
+    gap: 10px;
+  }
+
+  .vs-step-icon {
+    width: 39px;
+    height: 39px;
+    flex-basis: 39px;
+  }
+
+  .vs-card-number {
+    font-size: 23px;
+  }
+
+  .vs-form-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .vs-primary-button {
+    width: 100%;
+  }
+
+  .vs-footer {
+    align-items: flex-start;
+  }
+
+  .vs-language-pill {
+    font-size: 9px;
+  }
+}

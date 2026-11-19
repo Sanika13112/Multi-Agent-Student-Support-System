@@ -1,0 +1,88 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}AI Assistant{% endblock %}
+{% block body_class %}page-assistant{% endblock %}
+
+{% block page_title %}AI Assistant{% endblock %}
+{% block page_description %}Ask about a concept, a career roadmap or interview preparation. StudyMate sends your question to the agent best suited to answer it.{% endblock %}
+
+{% block content %}
+<div class="assistant-grid">
+    <section class="chat" aria-label="Conversation">
+        <div class="chat-log" id="chatMessages" role="log" aria-live="polite">
+            <div class="message bot-message">
+                <p>Hi! I can explain engineering concepts step by step, plan a learning roadmap, or quiz you for interviews. What would you like to work on?</p>
+            </div>
+        </div>
+
+        <form class="chat-composer" id="chatForm">
+            <label class="visually-hidden" for="messageInput">Your question</label>
+            <textarea class="textarea" id="messageInput" name="message" rows="1"
+                      placeholder="Ask anything about your studies…" required></textarea>
+            <button class="btn btn-primary" type="submit" id="sendButton">
+                <i class="bi bi-send" aria-hidden="true"></i> Send
+            </button>
+        </form>
+        <p class="chat-note">Press Enter to send, Shift + Enter for a new line.</p>
+    </section>
+
+    <aside class="panel suggestions" aria-labelledby="suggestionsHeading">
+        <h2 class="panel-title" id="suggestionsHeading">Try asking</h2>
+        <p class="panel-description">Pick one to fill in the message box, then edit it.</p>
+        <div class="suggestion-list">
+            <button type="button" class="suggestion-card"
+                    data-prompt="Explain Artificial Neural Networks from basics with a simple example.">
+                <strong>Explain a concept</strong>
+                <span>Artificial neural networks, from basics with an example</span>
+            </button>
+            <button type="button" class="suggestion-card"
+                    data-prompt="Create a beginner-friendly AIML career roadmap for placements.">
+                <strong>Plan a career roadmap</strong>
+                <span>A beginner-friendly AIML roadmap for placements</span>
+            </button>
+            <button type="button" class="suggestion-card"
+                    data-prompt="Give me 10 Java technical interview questions with answers.">
+                <strong>Prepare for interviews</strong>
+                <span>10 Java technical questions with answers</span>
+            </button>
+            <button type="button" class="suggestion-card"
+                    data-prompt="Explain the difference between supervised and unsupervised learning.">
+                <strong>Clear a doubt</strong>
+                <span>Supervised vs unsupervised learning</span>
+            </button>
+        </div>
+    </aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+<script>
+    // Suggestions fill the message box; Enter sends; the box grows with the text.
+    (function () {
+        var input = document.getElementById("messageInput");
+        var form = document.getElementById("chatForm");
+        if (!input || !form) return;
+
+        document.querySelectorAll(".suggestion-card").forEach(function (button) {
+            button.addEventListener("click", function () {
+                input.value = button.dataset.prompt;
+                input.focus();
+                input.dispatchEvent(new Event("input", { bubbles: true }));
+            });
+        });
+
+        input.addEventListener("input", function () {
+            input.style.height = "auto";
+            input.style.height = Math.min(input.scrollHeight, 128) + "px";
+        });
+
+        input.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                form.requestSubmit();
+            }
+        });
+    })();
+</script>
+{% endblock %}

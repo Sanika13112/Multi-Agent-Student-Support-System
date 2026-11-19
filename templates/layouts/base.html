@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>{% block title %}StudyMate AI{% endblock %}{% if self.title() != "StudyMate AI" %} | StudyMate AI{% endif %}</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
+
+    {# Apply the saved theme before first paint (no flash). #}
+    <script>
+        (function () {
+            try {
+                var theme = localStorage.getItem("studymate-theme");
+                if (theme === "dark" || theme === "light") {
+                    document.documentElement.setAttribute("data-theme", theme);
+                }
+            } catch (error) { /* storage blocked */ }
+        })();
+    </script>
+
+    <link rel="preload" href="{{ url_for('static', filename='vendor/fonts/schibsted-grotesk-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/icons/bootstrap-icons.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}" {% block body_attrs %}{% endblock %}>
+    {% block body %}{% endblock %}
+
+    <script src="{{ url_for('static', filename='js/core/shell.js') }}" defer></script>
+    {# Progress must load before page scripts so it can see their API calls. #}
+    <script src="{{ url_for('static', filename='js/core/progress.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/core/focus.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

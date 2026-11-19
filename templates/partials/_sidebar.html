@@ -1,0 +1,29 @@
+{% from "config/navigation.html" import NAVIGATION %}
+<aside class="sidebar" id="sidebar" aria-label="Main menu">
+    <a class="brand" href="/">
+        <span class="brand-mark" aria-hidden="true">Sm</span>
+        <span class="brand-name">
+            <strong>StudyMate AI</strong>
+            <small>Local study workspace</small>
+        </span>
+    </a>
+
+    <nav class="stack" aria-label="Pages">
+        {% for group in NAVIGATION %}
+        <div class="nav-group">
+            <p class="nav-group-title">{{ group.title }}</p>
+            {% for item in group["items"] %}
+            {% set active = request.path == item.path or (item.path != "/" and request.path.startswith(item.path ~ "/")) %}
+            <a class="nav-link{% if active %} is-active{% endif %}" href="{{ item.path }}"{% if active %} aria-current="page"{% endif %}>
+                <i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>
+                <span class="nav-label">{{ item.label }}</span>
+            </a>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </nav>
+
+    <div class="sidebar-footer">
+        <p class="sidebar-note">Everything runs on this computer with Ollama and Qwen. Your files stay here.</p>
+    </div>
+</aside>

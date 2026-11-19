@@ -1,0 +1,95 @@
+/* Upload: drop zone + selected-file chip. */
+
+.dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: 10rem;
+    padding: var(--space-6) var(--space-4);
+    border: 1.5px dashed color-mix(in srgb, var(--tool) 45%, var(--rule-strong));
+    border-radius: var(--radius-panel);
+    background: radial-gradient(18rem 9rem at 50% 0%, color-mix(in srgb, var(--tool-glow) 35%, transparent), transparent 75%), var(--sheet-sunken);
+    color: var(--graphite);
+    text-align: center;
+    cursor: pointer;
+    transition: border-color var(--duration) var(--ease), background var(--duration) var(--ease);
+}
+
+.dropzone:hover,
+.dropzone:focus-within,
+.dropzone.is-dragging {
+    border-color: var(--tool);
+    box-shadow: 0 0 0 1px var(--tool), 0 0 32px -8px var(--tool-glow);
+}
+
+.dropzone-icon {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: var(--space-1);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--tool) 18%, transparent);
+    box-shadow: 0 0 24px -4px var(--tool-glow);
+    color: var(--tool);
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+.dropzone-title {
+    font-weight: 650;
+}
+
+.dropzone-hint {
+    color: var(--pencil);
+    font-size: var(--text-sm);
+}
+
+.dropzone-types {
+    margin-top: var(--space-1);
+    color: var(--pencil-soft);
+    font-size: var(--text-xs);
+}
+
+/* Selected file (QuickNotes adds .has-file from JS). */
+.file-chip {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-control);
+    color: var(--pencil);
+    font-size: var(--text-sm);
+    overflow-wrap: anywhere;
+}
+
+.file-chip i {
+    flex-shrink: 0;
+    color: var(--pencil-soft);
+}
+
+.file-chip.has-file {
+    border-color: color-mix(in srgb, var(--success) 50%, transparent);
+    background: var(--success-wash);
+    color: var(--graphite);
+    font-weight: 600;
+}
+
+.file-chip.has-file i {
+    color: var(--success);
+}
+
+.dropzone.has-file {
+    border-style: solid;
+    border-color: var(--tool);
+}
+
+.dropzone.has-file .dropzone-hint {
+    color: var(--graphite);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}

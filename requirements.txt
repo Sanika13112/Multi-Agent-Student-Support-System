@@ -1,0 +1,10 @@
+
+Flask
+flask-cors
+nltk
+scikit-learn
+mysql-connector-python
+pypdf
+reportlab
+python-dotenv
+anthropic

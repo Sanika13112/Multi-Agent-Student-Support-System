@@ -1,0 +1,104 @@
+{% extends "layouts/app.html" %}
+{% import "macros/ui.html" as ui %}
+
+{% block title %}VoiceSnap{% endblock %}
+{% block body_class %}page-voice-snap{% endblock %}
+
+{% block page_title %}VoiceSnap{% endblock %}
+{% block page_description %}Upload a lecture or class recording. VoiceSnap writes out what was said, then turns the transcript into study notes.{% endblock %}
+
+{% block content %}
+<div class="workspace">
+    <div class="workspace-controls">
+        <section class="panel">
+            {{ ui.panel_header("Upload a recording", "MP3, WAV, M4A, FLAC, OGG, WEBM or MP4, up to 100 MB.", step=1) }}
+
+            <form id="voiceSnapUploadForm" class="stack" novalidate>
+                {% call ui.dropzone("voiceSnapAudio", "Choose an audio file", "Click to browse your recordings", "Processed on this computer", icon="mic", show_filename=True) %}
+                    <input class="visually-hidden" type="file" id="voiceSnapAudio"
+                           accept=".mp3,.wav,.m4a,.flac,.ogg,.webm,.mp4,audio/*" required>
+                {% endcall %}
+                <div class="file-chip" id="voiceSnapAudioInfo">Maximum file size: 100 MB</div>
+                <button class="btn btn-primary btn-lg btn-block" id="voiceSnapUploadButton" type="submit">Transcribe audio</button>
+            </form>
+            <div id="voiceSnapStatus" class="status" role="status" aria-live="polite"></div>
+        </section>
+
+        <section class="panel">
+            <h2 class="panel-title">Start over</h2>
+            <p class="panel-description">Clears the transcript and notes from this session.</p>
+            <button type="button" class="btn btn-secondary btn-block mt-3" id="voiceSnapResetButton">
+                <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Reset VoiceSnap
+            </button>
+        </section>
+    </div>
+
+    <div class="workspace-output">
+        <section class="sheet vs-placeholder" aria-label="Output">
+            <div class="sheet-body">
+                {{ ui.empty_state(
+                    "Your transcript will appear here",
+                    "Upload a recording and press Transcribe audio. Longer lectures can take a few minutes on a laptop.",
+                    ["A full transcript of the recording", "Quick or detailed notes made from it", "A Markdown download of the notes"]
+                ) }}
+            </div>
+        </section>
+
+        <article class="sheet" id="voiceSnapTranscriptPanel" hidden aria-labelledby="transcriptHeading">
+            <header class="sheet-header">
+                <div>
+                    <h2 class="sheet-title" id="transcriptHeading"><span class="step-index step-inline" aria-hidden="true">2</span> Transcript</h2>
+                    <p class="sheet-subtitle">What was said in the recording.</p>
+                </div>
+                <span class="badge" id="voiceSnapLanguage">Language</span>
+            </header>
+            <div class="sheet-body">
+                <div class="prose vs-transcript" id="voiceSnapTranscript"></div>
+            </div>
+        </article>
+
+        <article class="sheet" id="voiceSnapNotesPanel" hidden aria-labelledby="vsNotesHeading">
+            <header class="sheet-header">
+                <div>
+                    <h2 class="sheet-title" id="vsNotesHeading"><span class="step-index step-inline" aria-hidden="true">3</span> Study notes</h2>
+                    <p class="sheet-subtitle">Choose how detailed the notes should be.</p>
+                </div>
+            </header>
+            <div class="sheet-body">
+                <div class="grid-2 vs-modes">
+                    <button class="choice" id="voiceSnapQuickButton" type="button">
+                        <span class="choice-body">
+                            <span class="choice-title"><i class="bi bi-lightning-charge" aria-hidden="true"></i> Quick notes</span>
+                            <span class="choice-text">Key points and a short summary.</span>
+                        </span>
+                    </button>
+                    <button class="choice" id="voiceSnapDetailedButton" type="button">
+                        <span class="choice-body">
+                            <span class="choice-title"><i class="bi bi-journal-richtext" aria-hidden="true"></i> Detailed notes</span>
+                            <span class="choice-text">Organised explanations written by your local Qwen model.</span>
+                        </span>
+                    </button>
+                </div>
+
+                <div id="voiceSnapNotesStatus" class="status" role="status" aria-live="polite"></div>
+                <div class="prose vs-notes" id="voiceSnapNotes" data-render-diagrams></div>
+
+                <div class="vs-download" id="voiceSnapDownloadActions" hidden>
+                    <span>Your notes are ready.</span>
+                    <a class="btn btn-secondary" id="voiceSnapDownloadButton" href="#">
+                        <i class="bi bi-download" aria-hidden="true"></i> Download .md
+                    </a>
+                </div>
+            </div>
+        </article>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/js/marked.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/js/purify.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/js/mermaid.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/core/diagrams.js') }}"></script>
+<script src="{{ url_for('static', filename='js/voice_snap.js') }}"></script>
+{% endblock %}
