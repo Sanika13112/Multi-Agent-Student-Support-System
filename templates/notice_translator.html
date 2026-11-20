@@ -5,7 +5,7 @@
 
 {% block page_title %}Notice Translator{% endblock %}
 {% block page_description %}
-Extract text from college notice images and identify their language automatically.
+Extract text from college notices (photo, PDF or Word file) and identify their language automatically.
 {% endblock %}
 
 {% block head %}
@@ -20,26 +20,26 @@ Extract text from college notice images and identify their language automaticall
         <div class="panel-heading">
             <h2 class="panel-title">Upload a notice</h2>
             <p class="panel-description">
-                Upload a clear JPG, JPEG or PNG image. Maximum size: 10 MB.
+                Upload a clear photo (JPG, PNG), a PDF or a Word (.docx) file. Maximum size: 10 MB.
             </p>
         </div>
 
         <label class="nt-dropzone" for="noticeImage">
             <i class="bi bi-cloud-arrow-up"></i>
-            <strong>Choose a notice image</strong>
+            <strong>Choose a notice</strong>
             <span>Click here to browse your files</span>
-            <small>JPG · JPEG · PNG</small>
+            <small>JPG · PNG · PDF · DOCX</small>
         </label>
 
         <input type="file"
                id="noticeImage"
-               accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+               accept=".jpg,.jpeg,.png,.pdf,.docx,image/jpeg,image/png,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                hidden>
 
         <div class="nt-file-info" id="fileInfo" hidden>
-            <i class="bi bi-file-earmark-image"></i>
+            <i class="bi bi-file-earmark-image" id="fileIcon"></i>
             <span id="fileName"></span>
-            <button type="button" id="removeFile" aria-label="Remove image">
+            <button type="button" id="removeFile" aria-label="Remove file">
                 <i class="bi bi-x-lg"></i>
             </button>
         </div>
@@ -92,7 +92,7 @@ Extract text from college notice images and identify their language automaticall
             <div>
                 <h2 class="sheet-title">Extracted notice text</h2>
                 <p class="sheet-subtitle">
-                    Review and edit the text extracted from your image.
+                    Review and edit the text extracted from your notice.
                 </p>
             </div>
 

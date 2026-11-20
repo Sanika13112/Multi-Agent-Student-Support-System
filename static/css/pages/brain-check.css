@@ -762,3 +762,212 @@
         padding: var(--space-4);
     }
 }
+
+/* ==========================================
+   STUDENT FEEDBACK (brain_check_feedback.js)
+   ========================================== */
+
+.bc-feedback {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--rule);
+}
+
+.bc-rating {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.bc-rating legend {
+    float: left;
+    margin-right: var(--space-3);
+}
+
+.bc-rating label {
+    padding: 2px 4px;
+    color: var(--pencil-soft);
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 120ms ease, transform 120ms ease;
+}
+
+.bc-rating label:hover,
+.bc-rating label.is-on {
+    color: var(--warning);
+}
+
+.bc-rating label:hover {
+    transform: scale(1.12);
+}
+
+.bc-rating input:focus-visible + label {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.bc-feedback-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+}
+
+.bc-feedback-status {
+    color: var(--pencil);
+    font-size: var(--text-sm);
+}
+
+.bc-feedback-status.success {
+    color: var(--success);
+}
+
+.bc-feedback-status.error {
+    color: var(--danger);
+}
+
+.bc-feedback-result {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    border-radius: var(--radius-control);
+    background: var(--sheet-sunken);
+}
+
+.bc-feedback-line {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+}
+
+.bc-aspect-chip {
+    padding: 0.15rem 0.6rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-xs);
+    font-weight: 600;
+}
+
+.bc-aspect-chip.strong { border-color: var(--success); color: var(--success); }
+.bc-aspect-chip.average { border-color: var(--warning); color: var(--warning); }
+.bc-aspect-chip.weak { border-color: var(--danger); color: var(--danger); }
+
+/* Dashboard card */
+.bc-feedback-insights {
+    margin-top: var(--space-4);
+}
+
+.bc-feedback-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
+}
+
+.bc-feedback-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-3);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-control);
+}
+
+.bc-feedback-stat strong {
+    font-size: var(--text-lg);
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+}
+
+.bc-feedback-stat span {
+    color: var(--pencil);
+    font-size: var(--text-xs);
+}
+
+.bc-feedback-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-5);
+    margin-top: var(--space-4);
+}
+
+.bc-feedback-subheading {
+    margin: var(--space-4) 0 var(--space-2);
+    color: var(--pencil);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.bc-feedback-grid .bc-feedback-subheading {
+    margin-top: 0;
+}
+
+/* Wider value column than the subject bars: values read like "2 (66.7%)". */
+.bc-feedback-grid .bc-subject-row {
+    grid-template-columns: 4.5rem 1fr 5.5rem;
+}
+
+.bc-feedback-grid .bc-subject-score {
+    white-space: nowrap;
+}
+
+.bc-feedback-table-wrap {
+    overflow-x: auto;
+}
+
+.bc-feedback-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+}
+
+.bc-feedback-table th,
+.bc-feedback-table td {
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--rule);
+    text-align: left;
+}
+
+.bc-feedback-table th {
+    color: var(--pencil);
+    font-size: var(--text-xs);
+    font-weight: 650;
+}
+
+.bc-feedback-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.bc-feedback-item {
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-control);
+}
+
+.bc-feedback-text {
+    margin-top: var(--space-2);
+    font-size: var(--text-sm);
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+    .bc-feedback-stats,
+    .bc-feedback-grid {
+        grid-template-columns: 1fr;
+    }
+}

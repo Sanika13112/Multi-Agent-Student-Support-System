@@ -30,7 +30,8 @@ def generate_response(
     prompt,
     system_prompt=None,
     temperature=0.7,
-    max_tokens=None
+    max_tokens=None,
+    json_mode=False
 ):
     """
     Generate an AI response using local Ollama.
@@ -40,6 +41,10 @@ def generate_response(
         system_prompt (str): Optional system instructions.
         temperature (float): Controls response creativity.
         max_tokens (int): Maximum generated tokens.
+        json_mode (bool): Force the model to output valid JSON.
+            Ollama then only allows tokens that keep the output valid
+            JSON, which small models like qwen2.5:1.5b need for long
+            structured answers (Career Guidance, BrainCheck).
 
     Returns:
         str: AI-generated response.
@@ -125,11 +130,15 @@ def generate_response(
 
     try:
 
+        # format="json" turns on Ollama's JSON mode (only when asked).
+        extra_arguments = {"format": "json"} if json_mode else {}
+
         response = ollama.chat(
             model=MODEL_NAME,
             messages=messages,
             options=options,
-            keep_alive=MODEL_KEEP_ALIVE
+            keep_alive=MODEL_KEEP_ALIVE,
+            **extra_arguments
         )
 
         answer = response["message"]["content"]

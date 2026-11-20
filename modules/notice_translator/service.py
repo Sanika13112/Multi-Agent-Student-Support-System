@@ -4,14 +4,27 @@ Notice Translator Service
 -------------------------
 Offline OCR + language detection + NLP information extraction
 for English, Hindi and Marathi college notices.
+
+Accepted files:
+    JPG / PNG  -> EasyOCR reads the text from the image
+    PDF        -> text is read directly; scanned pages are OCR'd
+    DOCX       -> paragraphs and tables are read from the Word file
+
+EasyOCR, fastText and PyMuPDF are imported only when needed, so a Word
+file does not need EasyOCR, and a missing package gives a clear message.
 """
 
 from pathlib import Path
 from collections import defaultdict
+import io
 import re
+import unicodedata
+import zipfile
+import xml.etree.ElementTree as ET
 
-import easyocr
-import fasttext
+
+class NoticeDependencyError(RuntimeError):
+    """A package needed for this file type is not installed."""
 
 
 # --------------------------------------------------
@@ -21,7 +34,23 @@ import fasttext
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 LANGUAGE_MODEL_PATH = PROJECT_ROOT / "models" / "lid.176.ftz"
 
-SUPPORTED_EXTENSIONS = {".jpg", ".jpeg", ".png"}
+IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}
+DOCUMENT_EXTENSIONS = {".pdf", ".docx"}
+SUPPORTED_EXTENSIONS = IMAGE_EXTENSIONS | DOCUMENT_EXTENSIONS
+
+MAX_FILE_BYTES = 10 * 1024 * 1024
+MAX_PDF_PAGES = 10              # notices are short; keeps OCR time reasonable
+MIN_PAGE_TEXT_CHARS = 20        # fewer characters than this = scanned page, use OCR
+PDF_OCR_DPI = 200               # resolution used to turn a scanned page into an image
+
+WORD_NAMESPACE = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+
+# OCR quality control
+MIN_OCR_CONFIDENCE = 0.35       # EasyOCR's own score; lower lines are usually noise
+MIN_TEXT_CHARACTER_SHARE = 0.6  # lines that are mostly symbols ("*-10*+7*") are dropped
+LOW_QUALITY_CONFIDENCE = 0.55   # average below this -> warn that text may be wrong
+OCR_TARGET_LONG_SIDE = 2000     # small photos are enlarged to about this many pixels
+OCR_MAX_LONG_SIDE = 3000        # very large photos are shrunk (faster, same accuracy)
 
 LANGUAGE_NAMES = {
     "en": "English",
@@ -45,9 +74,19 @@ def get_ocr_reader():
     global _ocr_reader
 
     if _ocr_reader is None:
+        try:
+            import easyocr
+        except ImportError as error:
+            raise NoticeDependencyError(
+                "EasyOCR is not installed, so images and scanned PDFs cannot be read. "
+                "Run: python -m pip install easyocr"
+            ) from error
+
         print("Loading OCR model...")
+        # Hindi and Marathi share EasyOCR's Devanagari model;
+        # adding "mr" lets it read Marathi-only letters such as ळ.
         _ocr_reader = easyocr.Reader(
-            ["en", "hi"],
+            ["en", "hi", "mr"],
             gpu=False
         )
 
@@ -64,6 +103,14 @@ def get_language_model():
             raise FileNotFoundError(
                 f"Language model not found: {LANGUAGE_MODEL_PATH}"
             )
+
+        try:
+            import fasttext
+        except ImportError as error:
+            raise NoticeDependencyError(
+                "fastText is not installed, so the language cannot be detected. "
+                "Run: python -m pip install fasttext-wheel"
+            ) from error
 
         print("Loading language detection model...")
         _language_model = fasttext.load_model(
@@ -99,9 +146,22 @@ def preprocess_text(text):
 
     text = clean_text(text)
 
-    # Normalize common OCR spacing problems.
-    text = re.sub(r" *([,;:]) *", r"\1 ", text)
-    text = re.sub(r" *([.!?])(?=\S)", r"\1 ", text)
+    # Normalize common OCR spacing problems, without breaking times
+    # (10:30), dotted dates (18.11.2026), emails, websites or amounts (Rs.500).
+
+    # 1. No space before punctuation: "word ," -> "word,".
+    text = re.sub(r" +([,;:.!?])", r"\1", text)
+
+    # 2. One space after , ; : ...
+    text = re.sub(r"([,;:]) *", r"\1 ", text)
+
+    # ... but keep numbers together: "10: 30" -> "10:30", "1, 000" -> "1,000".
+    text = re.sub(r"(\d): (\d)", r"\1:\2", text)
+    text = re.sub(r"(\d), (\d{3})\b", r"\1,\2", text)
+
+    # 3. Space after a sentence end only between a lowercase word and a
+    #    capitalised one: "report.Late" -> "report. Late".
+    text = re.sub(r"(?<=[a-z])([.!?])(?=[A-Z])", r"\1 ", text)
 
     return clean_text(text)
 
@@ -193,18 +253,20 @@ def extract_information(text):
     ]
 
     # Common venue/location indicators.
-    venue_keywords = [
-        "venue", "location", "at ", "room no", "auditorium",
-        "स्थळ", "ठिकाण", "कक्ष", "सभागृह"
+    # English words must match as whole words ("at" must not match "that").
+    venue_pattern = re.compile(
+        r"\b(?:venue|location|room|hall|auditorium|lab|at)\b",
+        flags=re.IGNORECASE
+    )
+    venue_keywords_devanagari = [
+        "स्थळ", "ठिकाण", "स्थान", "कक्ष", "सभागृह"
     ]
 
     venue_sentences = [
         sentence
         for sentence in split_sentences(text)
-        if any(
-            keyword in sentence.lower()
-            for keyword in venue_keywords
-        )
+        if venue_pattern.search(sentence)
+        or any(keyword in sentence for keyword in venue_keywords_devanagari)
     ]
 
     # Common event indicators.
@@ -484,61 +546,333 @@ def detect_languages(text, text_segments=None):
 # OCR EXTRACTION
 # --------------------------------------------------
 
-def extract_notice_text(image_path):
-    """Extract text from an uploaded notice image."""
+def prepare_image_for_ocr(image_source):
+    """
+    Make a photo easier for OCR:
+      1. rotate it upright using the phone's EXIF orientation,
+      2. convert to grayscale and stretch the contrast,
+      3. enlarge small photos (OCR misreads tiny letters) and shrink huge ones.
 
-    image_path = Path(image_path)
+    image_source: a file path or PNG/JPG bytes. Returns a numpy array,
+    or the original source if Pillow is not available.
+    """
 
-    if not image_path.exists() or not image_path.is_file():
-        raise FileNotFoundError(
-            f"Image file not found: {image_path}"
+    try:
+        import numpy as np
+        from PIL import Image, ImageOps
+    except ImportError:
+        return image_source
+
+    if isinstance(image_source, (bytes, bytearray)):
+        image = Image.open(io.BytesIO(image_source))
+    else:
+        image = Image.open(image_source)
+
+    image = ImageOps.exif_transpose(image)
+    image = ImageOps.autocontrast(image.convert("L"), cutoff=1)
+
+    long_side = max(image.size)
+    if long_side < OCR_TARGET_LONG_SIDE:
+        scale = min(OCR_TARGET_LONG_SIDE / long_side, 3)
+    elif long_side > OCR_MAX_LONG_SIDE:
+        scale = OCR_MAX_LONG_SIDE / long_side
+    else:
+        scale = 1
+
+    if scale != 1:
+        image = image.resize(
+            (max(1, round(image.width * scale)), max(1, round(image.height * scale))),
+            Image.LANCZOS
         )
 
-    if image_path.suffix.lower() not in SUPPORTED_EXTENSIONS:
-        raise ValueError(
-            "Only JPG, JPEG and PNG images are supported."
-        )
+    return np.array(image)
 
-    if image_path.stat().st_size == 0:
-        raise ValueError("The uploaded image is empty.")
 
-    if image_path.stat().st_size > 10 * 1024 * 1024:
-        raise ValueError("Image size must not exceed 10 MB.")
+def text_character_share(text):
+    """
+    Share of a line made of letters, digits or Devanagari vowel signs.
+    "दिनांक 18/11" is high; "*-10*+7*" is low (OCR noise).
+    """
 
-    reader = get_ocr_reader()
+    characters = [ch for ch in text if not ch.isspace()]
+    if not characters:
+        return 0.0
 
-    results = reader.readtext(
-        str(image_path),
-        detail=1,
-        paragraph=False
+    useful = sum(
+        1 for ch in characters
+        if ch.isalnum() or unicodedata.category(ch).startswith("M")
     )
+    return useful / len(characters)
 
-    text_segments = []
-    extracted_lines = []
+
+def _ocr_lines(results, page_number=None):
+    """
+    Turn EasyOCR results [(box, text, confidence), ...] into line records,
+    keeping only lines EasyOCR is reasonably sure about.
+
+    Returns:
+        (kept_lines, removed_count)
+    """
+
+    lines = []
+    removed = 0
 
     for item in results:
         detected_text = item[1].strip()
         confidence = float(item[2])
 
-        if detected_text:
-            text_segments.append(detected_text)
+        if not detected_text:
+            continue
 
-            extracted_lines.append({
-                "text": detected_text,
-                "ocr_confidence": round(confidence, 4),
-            })
+        if (
+            confidence < MIN_OCR_CONFIDENCE
+            or text_character_share(detected_text) < MIN_TEXT_CHARACTER_SHARE
+        ):
+            removed += 1
+            continue
 
+        lines.append({
+            "text": detected_text,
+            "ocr_confidence": round(confidence, 4),
+            "page": page_number,
+        })
+
+    return lines, removed
+
+
+def run_ocr(image_source, page_number=None):
+    """Prepare the image, run EasyOCR, and filter the lines."""
+
+    results = get_ocr_reader().readtext(
+        prepare_image_for_ocr(image_source),
+        detail=1,
+        paragraph=False
+    )
+    return _ocr_lines(results, page_number)
+
+
+def extract_image_text(image_path):
+    """JPG/PNG: read the text with EasyOCR."""
+
+    lines, removed = run_ocr(str(image_path))
+    return {"lines": lines, "removed_lines": removed, "source_type": "image", "pages": 1}
+
+
+def extract_pdf_text(pdf_path):
+    """
+    PDF: read each page's text layer directly (fast and exact).
+    A page with almost no text is a scanned image, so it is rendered
+    as a picture and read with EasyOCR instead.
+    """
+
+    try:
+        import pymupdf
+    except ImportError as error:
+        raise NoticeDependencyError(
+            "PyMuPDF is not installed, so PDFs cannot be read. "
+            "Run: python -m pip install pymupdf"
+        ) from error
+
+    try:
+        document = pymupdf.open(str(pdf_path))
+    except Exception as error:
+        raise ValueError("This PDF could not be opened. It may be damaged.") from error
+
+    with document:
+        if document.needs_pass:
+            raise ValueError("Password-protected PDFs are not supported.")
+
+        page_count = len(document)
+        lines = []
+        removed = 0
+        text_pages = 0
+        scanned_pages = 0
+
+        for index in range(min(page_count, MAX_PDF_PAGES)):
+            page = document[index]
+            page_lines = [line.strip() for line in page.get_text("text").splitlines() if line.strip()]
+
+            if len(" ".join(page_lines)) >= MIN_PAGE_TEXT_CHARS:
+                text_pages += 1
+                lines += [{"text": line, "ocr_confidence": None, "page": index + 1} for line in page_lines]
+            else:
+                scanned_pages += 1
+                image_bytes = page.get_pixmap(dpi=PDF_OCR_DPI).tobytes("png")
+                page_lines, page_removed = run_ocr(image_bytes, page_number=index + 1)
+                lines += page_lines
+                removed += page_removed
+
+    if scanned_pages and text_pages:
+        source_type = "pdf_mixed"
+    elif scanned_pages:
+        source_type = "pdf_scanned"
+    else:
+        source_type = "pdf_text"
+
+    return {
+        "lines": lines,
+        "removed_lines": removed,
+        "source_type": source_type,
+        "pages": page_count,
+        "pages_read": min(page_count, MAX_PDF_PAGES),
+    }
+
+
+def _word_paragraph_text(paragraph):
+    """Text of one Word paragraph: its <w:t> runs, with tabs and line breaks kept."""
+
+    parts = []
+    for node in paragraph.iter():
+        if node.tag == WORD_NAMESPACE + "t" and node.text:
+            parts.append(node.text)
+        elif node.tag == WORD_NAMESPACE + "tab":
+            parts.append(" ")
+        elif node.tag in (WORD_NAMESPACE + "br", WORD_NAMESPACE + "cr"):
+            parts.append("\n")
+    return "".join(parts)
+
+
+def _word_xml_lines(xml_bytes):
+    """Lines from one Word XML part, in reading order. Table rows become 'a | b | c'."""
+
+    root = ET.fromstring(xml_bytes)
+    body = root.find(WORD_NAMESPACE + "body")
+    container = body if body is not None else root
+    lines = []
+
+    for block in container:
+        if block.tag == WORD_NAMESPACE + "p":
+            lines += _word_paragraph_text(block).split("\n")
+        elif block.tag == WORD_NAMESPACE + "tbl":
+            for row in block.iter(WORD_NAMESPACE + "tr"):
+                cells = [
+                    " ".join(_word_paragraph_text(p) for p in cell.iter(WORD_NAMESPACE + "p")).strip()
+                    for cell in row.iter(WORD_NAMESPACE + "tc")
+                ]
+                lines.append(" | ".join(cell for cell in cells if cell))
+
+    return [line.strip() for line in lines if line.strip()]
+
+
+def extract_docx_text(docx_path):
+    """
+    DOCX: a Word file is a ZIP archive; the text is in word/document.xml
+    (letterheads are often in word/header*.xml). Read with the standard
+    library only, so no extra package is needed.
+    """
+
+    try:
+        with zipfile.ZipFile(docx_path) as archive:
+            names = archive.namelist()
+
+            if "word/document.xml" not in names:
+                raise ValueError("This is not a valid Word (.docx) file.")
+
+            # Refuse oversized XML (protects against "zip bombs").
+            if archive.getinfo("word/document.xml").file_size > 20 * 1024 * 1024:
+                raise ValueError("This Word file is too large to process.")
+
+            headers = sorted(name for name in names if re.fullmatch(r"word/header\d*\.xml", name))
+            lines = []
+            for part in headers + ["word/document.xml"]:
+                lines += _word_xml_lines(archive.read(part))
+
+    except zipfile.BadZipFile as error:
+        raise ValueError("This Word file could not be read. Save it again as .docx.") from error
+    except ET.ParseError as error:
+        raise ValueError("This Word file is damaged and could not be read.") from error
+
+    # A letterhead repeated on every page appears once.
+    unique_lines = list(dict.fromkeys(lines))
+
+    return {
+        "lines": [{"text": line, "ocr_confidence": None, "page": None} for line in unique_lines],
+        "source_type": "docx",
+        "pages": None,
+    }
+
+
+def extract_notice_text(file_path):
+    """
+    Extract text from an uploaded notice: image, PDF or Word file.
+
+    Returns:
+        dict: text, segments (one per line, used for language detection),
+              lines (with OCR confidence where OCR was used),
+              source_type and page information.
+    """
+
+    file_path = Path(file_path)
+
+    if not file_path.exists() or not file_path.is_file():
+        raise FileNotFoundError(f"File not found: {file_path}")
+
+    suffix = file_path.suffix.lower()
+
+    if suffix == ".doc":
+        raise ValueError("Old .doc files are not supported. Open it in Word and save as .docx or PDF.")
+
+    if suffix not in SUPPORTED_EXTENSIONS:
+        raise ValueError("Only JPG, PNG, PDF and DOCX files are supported.")
+
+    if file_path.stat().st_size == 0:
+        raise ValueError("The uploaded file is empty.")
+
+    if file_path.stat().st_size > MAX_FILE_BYTES:
+        raise ValueError("File size must not exceed 10 MB.")
+
+    if suffix in IMAGE_EXTENSIONS:
+        result = extract_image_text(file_path)
+    elif suffix == ".pdf":
+        result = extract_pdf_text(file_path)
+    else:
+        result = extract_docx_text(file_path)
+
+    text_segments = [line["text"] for line in result["lines"]]
     full_text = preprocess_text("\n".join(text_segments))
+    quality = ocr_quality(result["lines"], result.get("removed_lines", 0))
 
     if not full_text:
-        raise ValueError(
-            "No readable text was detected. Try a clearer image."
-        )
+        if suffix in IMAGE_EXTENSIONS or quality["ocr_used"]:
+            raise ValueError(
+                "No readable text was detected. Try a sharper, straight, well-lit photo, "
+                "or upload the original PDF if you have it."
+            )
+        raise ValueError("No text was found in this file.")
 
     return {
         "text": full_text,
         "segments": text_segments,
-        "lines": extracted_lines,
+        "lines": result["lines"],
+        "source_type": result["source_type"],
+        "pages": result["pages"],
+        "pages_read": result.get("pages_read"),
+        "quality": quality,
+    }
+
+
+def ocr_quality(lines, removed_lines):
+    """
+    Summarise how trustworthy the OCR text is.
+    Text read directly from a PDF/Word file has no OCR score and is trusted.
+    """
+
+    scores = [line["ocr_confidence"] for line in lines if line["ocr_confidence"] is not None]
+    ocr_used = bool(scores) or removed_lines > 0
+
+    if not ocr_used:
+        return {"ocr_used": False, "average_confidence": None, "removed_lines": 0, "low": False}
+
+    average = round(sum(scores) / len(scores), 4) if scores else 0.0
+    kept = len(scores)
+    low = average < LOW_QUALITY_CONFIDENCE or removed_lines > kept
+
+    return {
+        "ocr_used": True,
+        "average_confidence": average,
+        "kept_lines": kept,
+        "removed_lines": removed_lines,
+        "low": low,
     }
 
 
@@ -658,7 +992,7 @@ def structure_notice_text(text):
 def process_notice(image_path):
     """
     Complete pipeline:
-    Image -> OCR -> Preprocessing -> Language detection
+    Image/PDF/DOCX -> text (OCR or direct) -> Preprocessing -> Language detection
     -> Sentence segmentation -> Information extraction
     """
 
@@ -678,6 +1012,10 @@ def process_notice(image_path):
     return {
         "success": True,
         "extracted_text": processed_text,
+        "source_type": ocr_result["source_type"],
+        "quality": ocr_result["quality"],
+        "pages": ocr_result["pages"],
+        "pages_read": ocr_result["pages_read"],
         "lines": ocr_result["lines"],
         "language": language_result,
         "nlp": {

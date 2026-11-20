@@ -1,7 +1,19 @@
+"""
+MyMemory translation for the Notice Translator (cloud service).
+
+MyMemory answers from two places:
+  - its translation memory: sentences that people translated before, and
+  - machine translation (MT).
+For unclear input it can return a stored translation of a DIFFERENT
+sentence that only looks similar (e.g. a museum name for a garbled OCR
+line). choose_translation() detects that and uses the MT answer instead.
+"""
+
 import json
 import re
 import html
 import os
+from difflib import SequenceMatcher
 import urllib.parse
 import urllib.request
 import urllib.error
@@ -11,6 +23,10 @@ API_URL = "https://api.mymemory.translated.net/get"
 
 SUPPORTED_LANGUAGES = {"en", "hi", "mr"}
 MAX_QUERY_BYTES = 450
+
+# A stored translation is used only if its source sentence is at least this
+# similar to ours (1.0 = identical).
+MIN_MEMORY_SIMILARITY = 0.85
 
 
 class TranslationError(Exception):
@@ -55,6 +71,47 @@ def split_text(text, max_bytes=MAX_QUERY_BYTES):
         chunks.append(current)
 
     return chunks
+
+
+def _normalise(text):
+    """Lower-case and collapse spaces, for comparing sentences."""
+    return " ".join(str(text or "").lower().split())
+
+
+def _is_machine_translation(match):
+    """MyMemory marks machine-translated entries with created-by 'MT!'."""
+    return str(match.get("created-by", "")).upper().startswith("MT")
+
+
+def choose_translation(query, result):
+    """
+    Pick the translation to trust from a MyMemory response.
+
+    1. Start with MyMemory's main answer (responseData.translatedText).
+    2. Find which entry in "matches" produced it. If that entry is a stored
+       translation of a different sentence (similarity below
+       MIN_MEMORY_SIMILARITY), replace it with the machine translation entry.
+    3. If the response has no "matches" list, keep the main answer.
+    """
+
+    main_answer = result.get("responseData", {}).get("translatedText", "")
+    matches = [m for m in (result.get("matches") or []) if isinstance(m, dict)]
+
+    if not matches:
+        return main_answer
+
+    source = next((m for m in matches if m.get("translation") == main_answer), None)
+
+    if source is None or _is_machine_translation(source):
+        return main_answer
+
+    similarity = SequenceMatcher(None, _normalise(source.get("segment")), _normalise(query)).ratio()
+
+    if similarity >= MIN_MEMORY_SIMILARITY:
+        return main_answer
+
+    machine = next((m for m in matches if _is_machine_translation(m) and m.get("translation")), None)
+    return machine["translation"] if machine else main_answer
 
 
 def translate_chunk(text, source_language, target_language):
@@ -112,7 +169,7 @@ def translate_chunk(text, source_language, target_language):
             result.get("responseDetails") or "Translation was unsuccessful."
         )
 
-    translated = result.get("responseData", {}).get("translatedText", "")
+    translated = choose_translation(text, result)
 
     if not translated:
         raise TranslationError("MyMemory returned an empty translation.")

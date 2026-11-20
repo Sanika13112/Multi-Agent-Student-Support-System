@@ -515,6 +515,9 @@ document.addEventListener("DOMContentLoaded", () => {
             score_percentage: result.percentage
         };
 
+        // Tell the feedback box (brain_check_feedback.js) what is happening.
+        notifyFeedback("braincheck:saving");
+
         try {
             const response = await fetch(
                 "/api/brain-check/save-result",
@@ -534,6 +537,10 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             showStatus("Your quiz result has been saved to MySQL.", "success");
+            notifyFeedback("braincheck:attempt-saved", {
+                attemptId: data.attempt_id,
+                score: result.percentage
+            });
             await loadHistory();
 
         } catch (error) {
@@ -542,7 +549,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 "Quiz completed, but saving failed: " + error.message,
                 "error"
             );
+            notifyFeedback("braincheck:attempt-save-failed", {
+                message: error.message
+            });
         }
+    }
+
+    // Send a small event that brain_check_feedback.js listens for.
+    function notifyFeedback(name, detail = {}) {
+        document.dispatchEvent(new CustomEvent(name, { detail }));
     }
 
     // ==========================================

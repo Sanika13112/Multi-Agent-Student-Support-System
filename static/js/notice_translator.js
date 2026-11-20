@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const imageInput = document.getElementById("noticeImage");
     const fileInfo = document.getElementById("fileInfo");
     const fileName = document.getElementById("fileName");
+    const fileIcon = document.getElementById("fileIcon");
     const removeFile = document.getElementById("removeFile");
 
     const preview = document.getElementById("imagePreview");
@@ -53,6 +54,50 @@ document.addEventListener("DOMContentLoaded", () => {
         showTranslationStatus("");
     }
 
+    // Icon shown next to the chosen file name.
+    const FILE_ICONS = {
+        jpg: "bi-file-earmark-image",
+        jpeg: "bi-file-earmark-image",
+        png: "bi-file-earmark-image",
+        pdf: "bi-file-earmark-pdf",
+        docx: "bi-file-earmark-word"
+    };
+
+    // How the text was obtained, shown after processing.
+    function describeSource(data) {
+        const pages = data.pages
+            ? ` (${data.pages_read && data.pages_read < data.pages
+                ? `first ${data.pages_read} of ${data.pages} pages`
+                : `${data.pages} page${data.pages > 1 ? "s" : ""}`})`
+            : "";
+        const descriptions = {
+            image: "Text read from the image with OCR.",
+            pdf_text: `Text read directly from the PDF${pages}.`,
+            pdf_scanned: `Scanned PDF: text read from the page images with OCR${pages}.`,
+            pdf_mixed: `PDF text read directly, scanned pages read with OCR${pages}.`,
+            docx: "Text read from the Word file."
+        };
+        return descriptions[data.source_type] || "";
+    }
+
+    // Warn when OCR was unsure, so wrong text is not trusted blindly.
+    function describeQuality(quality) {
+        if (!quality || !quality.ocr_used) return "";
+
+        const percent = Math.round((quality.average_confidence || 0) * 100);
+        const removed = quality.removed_lines
+            ? ` ${quality.removed_lines} unclear line(s) were left out.`
+            : "";
+
+        if (!quality.low) {
+            return `OCR confidence ${percent}%.${removed}`;
+        }
+
+        return `Warning: the text was hard to read (OCR confidence ${percent}%).${removed} ` +
+            "The extracted text and its translation may be wrong. Try a sharper, straight, " +
+            "well-lit photo, or upload the original PDF.";
+    }
+
     function getLanguageCode(languageName) {
         const name = (languageName || "").toLowerCase();
 
@@ -68,17 +113,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!file) return;
 
-        const allowedTypes = ["image/jpeg", "image/png"];
+        // Check by file extension: browsers report Word/PDF types inconsistently.
+        const extension = file.name.split(".").pop().toLowerCase();
+        const isImage = ["jpg", "jpeg", "png"].includes(extension);
 
-        if (!allowedTypes.includes(file.type)) {
-            showStatus("Please select a JPG, JPEG or PNG image.", true);
+        if (extension === "doc") {
+            resetFile();   // clears the status, so show the message after it
+            showStatus("Old .doc files are not supported. Save it as .docx or PDF.", true);
+            return;
+        }
+
+        if (!isImage && !["pdf", "docx"].includes(extension)) {
             resetFile();
+            showStatus("Please select a JPG, PNG, PDF or DOCX file.", true);
             return;
         }
 
         if (file.size > 10 * 1024 * 1024) {
-            showStatus("Image size must not exceed 10 MB.", true);
             resetFile();
+            showStatus("File size must not exceed 10 MB.", true);
             return;
         }
 
@@ -86,14 +139,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
         fileName.textContent = file.name;
         fileInfo.hidden = false;
+        fileIcon.className = "bi " + FILE_ICONS[extension];
 
         if (previewURL) {
             URL.revokeObjectURL(previewURL);
+            previewURL = null;
         }
 
-        previewURL = URL.createObjectURL(file);
-        previewImage.src = previewURL;
-        preview.hidden = false;
+        // Only images get a picture preview.
+        if (isImage) {
+            previewURL = URL.createObjectURL(file);
+            previewImage.src = previewURL;
+            preview.hidden = false;
+        } else {
+            previewImage.removeAttribute("src");
+            preview.hidden = true;
+        }
 
         processButton.disabled = false;
 
@@ -105,7 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         languageResult.textContent = "Ready for language detection";
 
-        showStatus("Image selected. Ready to process.");
+        showStatus(isImage ? "Image selected. Ready to process." : "File selected. Ready to process.");
     });
 
     removeFile.addEventListener("click", resetFile);
@@ -137,7 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
     processButton.addEventListener("click", async () => {
 
         if (!selectedFile) {
-            showStatus("Please select a notice image first.", true);
+            showStatus("Please select a notice file first.", true);
             return;
         }
 
@@ -194,7 +255,11 @@ document.addEventListener("DOMContentLoaded", () => {
             translateButton.disabled =
                 !extractedText.value.trim() || !detectedCode;
 
-            showStatus(data.message || "Notice processed successfully.");
+            showStatus(
+                [data.message || "Notice processed successfully.", describeSource(data), describeQuality(data.quality)]
+                    .filter(Boolean).join(" "),
+                Boolean(data.quality && data.quality.low)
+            );
 
             resetTranslation();
 

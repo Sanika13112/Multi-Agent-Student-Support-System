@@ -48,6 +48,7 @@ from modules.quick_notes.service import (
 )
 
 from modules.common.database import get_db_connection
+from modules.common.utils import parse_ai_json
 
 from modules.ask_away.service import (
     upload_document,
@@ -305,23 +306,31 @@ def notice_translator():
 
 @app.route("/api/notice-translator/process", methods=["POST"])
 def process_notice_api():
-    """Extract text and detect language from a notice image."""
+    """Extract text and detect language from a notice image, PDF or Word file."""
 
+    # The form field keeps its old name "notice_image" so existing pages still work.
     uploaded_file = request.files.get("notice_image")
 
-    if not uploaded_file:
+    if not uploaded_file or not uploaded_file.filename:
         return jsonify({
             "success": False,
-            "error": "Please upload a notice image."
+            "error": "Please upload a notice (image, PDF or Word file)."
         }), 400
 
-    allowed_extensions = {"jpg", "jpeg", "png"}
     extension = uploaded_file.filename.rsplit(".", 1)[-1].lower()
+
+    if extension == "doc":
+        return jsonify({
+            "success": False,
+            "error": "Old .doc files are not supported. Open it in Word and save as .docx or PDF."
+        }), 400
+
+    allowed_extensions = {"jpg", "jpeg", "png", "pdf", "docx"}
 
     if extension not in allowed_extensions:
         return jsonify({
             "success": False,
-            "error": "Only JPG, JPEG and PNG images are supported."
+            "error": "Only JPG, PNG, PDF and DOCX files are supported."
         }), 400
 
     temp_path = None
@@ -335,17 +344,28 @@ def process_notice_api():
             temp_path = temp_file.name
 
         from modules.notice_translator import process_notice
+        from modules.notice_translator.service import NoticeDependencyError
 
-        result = process_notice(temp_path)
+        try:
+            result = process_notice(temp_path)
+
+        except NoticeDependencyError as error:
+            # A package is missing: tell the user exactly what to install.
+            logger.error("Notice Translator dependency missing: %s", error)
+            return jsonify({"success": False, "error": str(error)}), 503
+
+        except (ValueError, FileNotFoundError) as error:
+            # Problems with the file itself (empty, damaged, no text...).
+            return jsonify({"success": False, "error": str(error)}), 400
 
         return jsonify(result), 200
 
     except Exception:
-        logger.exception("Notice image processing failed")
+        logger.exception("Notice processing failed")
 
         return jsonify({
             "success": False,
-            "error": "Unable to process the notice image. Please try again."
+            "error": "Unable to process this notice. Please try again."
         }), 500
 
     finally:
@@ -775,6 +795,88 @@ def upload_quick_notes():
 # 8. BRAINCHECK - AI QUIZ GENERATION API
 # ==================================================
 
+def validate_quiz_data(quiz_data, question_count):
+    """
+    Check a BrainCheck quiz from the AI: the right number of questions,
+    options A-D, a valid correct answer and an explanation for each.
+    Returns the question list (correct answers upper-cased).
+    """
+
+    if not isinstance(quiz_data, dict):
+        raise ValueError("The AI returned an invalid quiz structure.")
+
+    questions = quiz_data.get("questions", [])
+
+    if not isinstance(questions, list):
+        raise ValueError("Invalid questions format.")
+
+    if len(questions) != question_count:
+        raise ValueError(
+            f"AI generated {len(questions)} questions instead of "
+            f"{question_count}. Please try generating again."
+        )
+
+    valid_keys = {"A", "B", "C", "D"}
+
+    for index, question in enumerate(questions):
+
+        if not isinstance(question, dict):
+            raise ValueError(f"Question {index + 1} is invalid.")
+
+        question_text = question.get("question")
+        options = question.get("options")
+
+        correct_answer = str(
+            question.get("correct_answer", "")
+        ).strip().upper()
+
+        explanation = question.get("explanation")
+
+        if (
+            not isinstance(question_text, str)
+            or not question_text.strip()
+        ):
+            raise ValueError(
+                f"Question {index + 1} is empty."
+            )
+
+        if not isinstance(options, dict):
+            raise ValueError(
+                f"Options for question {index + 1} are invalid."
+            )
+
+        if set(options.keys()) != valid_keys:
+            raise ValueError(
+                f"Question {index + 1} must have A, B, C and D options."
+            )
+
+        if correct_answer not in valid_keys:
+            raise ValueError(
+                f"Correct answer for question {index + 1} is invalid."
+            )
+
+        for key in valid_keys:
+            if (
+                not isinstance(options[key], str)
+                or not options[key].strip()
+            ):
+                raise ValueError(
+                    f"Option {key} in question {index + 1} is empty."
+                )
+
+        if (
+            not isinstance(explanation, str)
+            or not explanation.strip()
+        ):
+            raise ValueError(
+                f"Explanation for question {index + 1} is missing."
+            )
+
+        question["correct_answer"] = correct_answer
+
+    return questions
+
+
 @app.route("/api/brain-check/generate", methods=["POST"])
 def generate_brain_check_quiz():
     """Generate MCQs using the local Qwen2.5:3B model."""
@@ -896,113 +998,37 @@ Return only the JSON object.
 
         max_tokens = min(6000, 500 + question_count * 250)
 
-        ai_response = generate_response(
-            prompt=user_prompt,
-            system_prompt=system_prompt,
-            temperature=0.3,
-            max_tokens=max_tokens
-        )
+        # JSON mode makes Ollama output valid JSON. If the quiz is still
+        # unusable (wrong question count, missing options...), ask once more.
+        quiz_data = None
+        questions = None
+        last_problem = None
 
-        if not isinstance(ai_response, str) or not ai_response.strip():
-            raise ValueError("The AI returned an empty response.")
-
-        cleaned_response = ai_response.strip()
-
-        cleaned_response = re.sub(
-            r"^```(?:json)?\s*",
-            "",
-            cleaned_response,
-            flags=re.IGNORECASE
-        )
-
-        cleaned_response = re.sub(
-            r"\s*```$",
-            "",
-            cleaned_response
-        )
-
-        start_index = cleaned_response.find("{")
-        end_index = cleaned_response.rfind("}")
-
-        if start_index == -1 or end_index == -1:
-            raise ValueError(
-                "The AI did not return a valid JSON object."
+        for attempt in range(1, 3):
+            ai_response = generate_response(
+                prompt=user_prompt,
+                system_prompt=system_prompt,
+                temperature=0.3 if attempt == 1 else 0.2,
+                max_tokens=max_tokens,
+                json_mode=True
             )
 
-        json_text = cleaned_response[start_index:end_index + 1]
-        quiz_data = json.loads(json_text)
-
-        if not isinstance(quiz_data, dict):
-            raise ValueError("The AI returned an invalid quiz structure.")
-
-        questions = quiz_data.get("questions", [])
-
-        if not isinstance(questions, list):
-            raise ValueError("Invalid questions format.")
-
-        if len(questions) != question_count:
-            raise ValueError(
-                f"AI generated {len(questions)} questions instead of "
-                f"{question_count}. Please try generating again."
-            )
-
-        valid_keys = {"A", "B", "C", "D"}
-
-        for index, question in enumerate(questions):
-
-            if not isinstance(question, dict):
-                raise ValueError(f"Question {index + 1} is invalid.")
-
-            question_text = question.get("question")
-            options = question.get("options")
-
-            correct_answer = str(
-                question.get("correct_answer", "")
-            ).strip().upper()
-
-            explanation = question.get("explanation")
-
-            if (
-                not isinstance(question_text, str)
-                or not question_text.strip()
-            ):
-                raise ValueError(
-                    f"Question {index + 1} is empty."
+            try:
+                candidate = parse_ai_json(ai_response)
+                questions = validate_quiz_data(candidate, question_count)
+                quiz_data = candidate
+                break
+            except ValueError as problem:
+                last_problem = problem
+                logger.warning(
+                    "BrainCheck attempt %d unusable: %s",
+                    attempt,
+                    problem
                 )
 
-            if not isinstance(options, dict):
-                raise ValueError(
-                    f"Options for question {index + 1} are invalid."
-                )
-
-            if set(options.keys()) != valid_keys:
-                raise ValueError(
-                    f"Question {index + 1} must have A, B, C and D options."
-                )
-
-            if correct_answer not in valid_keys:
-                raise ValueError(
-                    f"Correct answer for question {index + 1} is invalid."
-                )
-
-            for key in valid_keys:
-                if (
-                    not isinstance(options[key], str)
-                    or not options[key].strip()
-                ):
-                    raise ValueError(
-                        f"Option {key} in question {index + 1} is empty."
-                    )
-
-            if (
-                not isinstance(explanation, str)
-                or not explanation.strip()
-            ):
-                raise ValueError(
-                    f"Explanation for question {index + 1} is missing."
-                )
-
-            question["correct_answer"] = correct_answer
+        if quiz_data is None:
+            # The validation messages already tell the student what to do.
+            raise ValueError(str(last_problem))
 
         quiz_title = quiz_data.get("title", f"{topic} Quiz")
 
@@ -1282,6 +1308,210 @@ def get_brain_check_history():
 
 
 # ==================================================
+# 10A. BRAINCHECK - STUDENT FEEDBACK AND SENTIMENT (CO2)
+# ==================================================
+# After a quiz the student can rate it (1-5) and write feedback.
+# nlp/feedback_analysis.py finds the sentiment and the aspects mentioned;
+# here we only store and load the rows.
+
+FEEDBACK_TABLE_SQL = """
+    CREATE TABLE IF NOT EXISTS quiz_feedback (
+        id            INT AUTO_INCREMENT PRIMARY KEY,
+        attempt_id    INT NOT NULL,
+        rating        TINYINT NULL,
+        feedback_text TEXT NOT NULL,
+        sentiment     VARCHAR(10) NOT NULL,
+        compound      DECIMAL(5,4) NOT NULL,
+        aspects_json  TEXT NULL,
+        created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uq_feedback_attempt (attempt_id)
+    )
+"""
+# No FOREIGN KEY on purpose: it fails if quiz_attempts.id has a slightly
+# different type on another machine. The route checks the attempt exists.
+
+
+def ensure_feedback_table(cursor):
+    """Create the quiz_feedback table the first time it is needed."""
+    cursor.execute(FEEDBACK_TABLE_SQL)
+
+
+@app.route("/api/brain-check/feedback", methods=["POST"])
+def save_brain_check_feedback():
+    """
+    Analyse and save feedback for one saved quiz attempt.
+
+    JSON body: {"attempt_id": 12, "feedback_text": "...", "rating": 4}
+    (rating is optional). One feedback per attempt; sending again updates it.
+    """
+
+    connection = None
+    cursor = None
+
+    try:
+        from nlp.feedback_analysis import analyze_feedback
+
+        data = request.get_json(silent=True)
+
+        if not isinstance(data, dict):
+            return create_error_response("Invalid request. Please send JSON data.")
+
+        attempt_id = data.get("attempt_id")
+
+        if isinstance(attempt_id, bool) or not isinstance(attempt_id, int) or attempt_id <= 0:
+            return create_error_response("A valid attempt_id is required.")
+
+        # Validation + sentiment + aspects (raises ValueError for bad input).
+        analysis = analyze_feedback(data.get("feedback_text"), data.get("rating"))
+
+        connection = get_db_connection()
+
+        if connection is None:
+            return create_error_response("Could not connect to the MySQL database.", 503)
+
+        cursor = connection.cursor(dictionary=True)
+        ensure_feedback_table(cursor)
+
+        cursor.execute(
+            "SELECT score_percentage FROM quiz_attempts WHERE id = %s",
+            (attempt_id,)
+        )
+        attempt = cursor.fetchone()
+
+        if attempt is None:
+            return create_error_response("Quiz attempt not found.", 404)
+
+        cursor.execute(
+            """
+            INSERT INTO quiz_feedback (
+                attempt_id, rating, feedback_text, sentiment, compound, aspects_json
+            )
+            VALUES (%s, %s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                rating = VALUES(rating),
+                feedback_text = VALUES(feedback_text),
+                sentiment = VALUES(sentiment),
+                compound = VALUES(compound),
+                aspects_json = VALUES(aspects_json)
+            """,
+            (
+                attempt_id,
+                analysis["rating"],
+                analysis["feedback_text"],
+                analysis["sentiment"],
+                analysis["compound"],
+                json.dumps(analysis["aspects"])
+            )
+        )
+        connection.commit()
+
+        logger.info(
+            "BrainCheck feedback saved | Attempt %s | %s (%.3f)",
+            attempt_id,
+            analysis["sentiment"],
+            analysis["compound"]
+        )
+
+        return jsonify({
+            "success": True,
+            "attempt_id": attempt_id,
+            "score_percentage": float(attempt["score_percentage"]),
+            "analysis": analysis
+        }), 201
+
+    except ValueError as error:
+        return create_error_response(str(error), 400)
+
+    except Exception:
+        if connection and connection.is_connected():
+            connection.rollback()
+
+        logger.exception("Could not save BrainCheck feedback.")
+
+        return create_error_response(
+            "Unable to save feedback. Please check the database.",
+            500
+        )
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if connection and connection.is_connected():
+            connection.close()
+
+
+@app.route("/api/brain-check/feedback-summary", methods=["GET"])
+def get_brain_check_feedback_summary():
+    """
+    Summarise all saved feedback together with quiz performance:
+    sentiment split, average score per sentiment, score-sentiment
+    correlation, aspects, VADER-vs-rating evaluation and recent feedback.
+    """
+
+    connection = None
+    cursor = None
+
+    try:
+        from nlp.feedback_analysis import summarize_feedback
+
+        connection = get_db_connection()
+
+        if connection is None:
+            return create_error_response("Could not connect to the MySQL database.", 503)
+
+        cursor = connection.cursor(dictionary=True)
+        ensure_feedback_table(cursor)
+
+        cursor.execute("""
+            SELECT
+                f.attempt_id,
+                f.rating,
+                f.feedback_text,
+                f.sentiment,
+                f.compound,
+                f.aspects_json,
+                f.created_at,
+                a.subject,
+                a.topic,
+                a.score_percentage
+            FROM quiz_feedback f
+            JOIN quiz_attempts a ON a.id = f.attempt_id
+            ORDER BY f.created_at DESC, f.id DESC
+            LIMIT 500
+        """)
+        rows = cursor.fetchall()
+
+        for row in rows:
+            row["aspects"] = json.loads(row.pop("aspects_json") or "[]")
+            row["compound"] = float(row["compound"])
+            row["score_percentage"] = float(row["score_percentage"])
+            if row.get("created_at"):
+                row["created_at"] = row["created_at"].isoformat(sep=" ", timespec="seconds")
+
+        return jsonify({
+            "success": True,
+            "summary": summarize_feedback(rows),
+            "recent": rows[:8]
+        }), 200
+
+    except Exception:
+        logger.exception("Could not load BrainCheck feedback summary.")
+
+        return create_error_response(
+            "Unable to load feedback. Please check the database.",
+            500
+        )
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if connection and connection.is_connected():
+            connection.close()
+
+
+# ==================================================
 # 11. BRAINCHECK - AI PERSONALIZED STUDY PLAN
 # ==================================================
 
@@ -1418,6 +1648,34 @@ Do not invent student performance information.
 # ==================================================
 # 12. CAREER GUIDANCE - AI CAREER ANALYSIS API
 # ==================================================
+
+def validate_career_data(career_data):
+    """Check the Career Guidance JSON has every section with the right type."""
+
+    required_fields = [
+        "summary",
+        "recommendations",
+        "skill_gap_analysis",
+        "learning_roadmap",
+        "placement_tips"
+    ]
+
+    for field in required_fields:
+        if field not in career_data:
+            raise ValueError(f"AI response is missing the {field} section.")
+
+    if not isinstance(career_data["recommendations"], list):
+        raise ValueError("Invalid career recommendations.")
+
+    if not isinstance(career_data["skill_gap_analysis"], dict):
+        raise ValueError("Invalid skill gap analysis.")
+
+    if not isinstance(career_data["learning_roadmap"], list):
+        raise ValueError("Invalid learning roadmap.")
+
+    if not isinstance(career_data["placement_tips"], list):
+        raise ValueError("Invalid placement tips.")
+
 
 @app.route("/api/career-guidance/generate", methods=["POST"])
 def generate_career_guidance():
@@ -1652,85 +1910,42 @@ Return only the requested JSON structure.
 """
 
         # ------------------------------------------
-        # STEP 6: GENERATE USING QWEN
+        # STEP 6: GENERATE USING QWEN (JSON MODE, ONE RETRY)
         # ------------------------------------------
+        # json_mode makes Ollama output valid JSON. If the reply is still
+        # unusable (e.g. a section is missing), we ask once more with a
+        # lower temperature before reporting an error.
 
-        ai_response = generate_response(
-            prompt=user_prompt,
-            system_prompt=system_prompt,
-            temperature=0.2,
-            max_tokens=1200
-        )
+        career_data = None
+        last_problem = None
 
-        if not isinstance(ai_response, str) or not ai_response.strip():
-            raise ValueError(
-                "The AI returned an empty career analysis."
+        for attempt in range(1, 3):
+            ai_response = generate_response(
+                prompt=user_prompt,
+                system_prompt=system_prompt,
+                temperature=0.2 if attempt == 1 else 0.1,
+                max_tokens=1800,
+                json_mode=True
             )
 
-        # ------------------------------------------
-        # STEP 7: CLEAN AI RESPONSE
-        # ------------------------------------------
-
-        cleaned_response = ai_response.strip()
-
-        cleaned_response = re.sub(
-            r"^```(?:json)?\s*",
-            "",
-            cleaned_response,
-            flags=re.IGNORECASE
-        )
-
-        cleaned_response = re.sub(
-            r"\s*```$",
-            "",
-            cleaned_response
-        )
-
-        start_index = cleaned_response.find("{")
-        end_index = cleaned_response.rfind("}")
-
-        if start_index == -1 or end_index == -1:
-            raise ValueError(
-                "The AI did not return valid JSON."
-            )
-
-        json_text = cleaned_response[start_index:end_index + 1]
-        career_data = json.loads(json_text)
-
-        if not isinstance(career_data, dict):
-            raise ValueError(
-                "Invalid career analysis structure."
-            )
-
-        # ------------------------------------------
-        # STEP 8: VALIDATE RESPONSE STRUCTURE
-        # ------------------------------------------
-
-        required_fields = [
-            "summary",
-            "recommendations",
-            "skill_gap_analysis",
-            "learning_roadmap",
-            "placement_tips"
-        ]
-
-        for field in required_fields:
-            if field not in career_data:
-                raise ValueError(
-                    f"AI response is missing the {field} section."
+            try:
+                candidate = parse_ai_json(ai_response)
+                validate_career_data(candidate)
+                career_data = candidate
+                break
+            except ValueError as problem:
+                last_problem = problem
+                logger.warning(
+                    "Career Guidance attempt %d unusable: %s",
+                    attempt,
+                    problem
                 )
 
-        if not isinstance(career_data["recommendations"], list):
-            raise ValueError("Invalid career recommendations.")
-
-        if not isinstance(career_data["skill_gap_analysis"], dict):
-            raise ValueError("Invalid skill gap analysis.")
-
-        if not isinstance(career_data["learning_roadmap"], list):
-            raise ValueError("Invalid learning roadmap.")
-
-        if not isinstance(career_data["placement_tips"], list):
-            raise ValueError("Invalid placement tips.")
+        if career_data is None:
+            raise ValueError(
+                "The AI returned an invalid response twice "
+                f"({last_problem}). Please try again."
+            )
 
         # ------------------------------------------
         # STEP 9: RETURN CAREER ANALYSIS
@@ -2400,6 +2615,7 @@ if __name__ == "__main__":
     print("Assistant        : http://127.0.0.1:5000/assistant")
     print("QuickNotes       : http://127.0.0.1:5000/quick-notes")
     print("BrainCheck       : http://127.0.0.1:5000/brain-check")
+    print("Quiz feedback    : POST /api/brain-check/feedback, GET /api/brain-check/feedback-summary")
     print("Career Guidance  : http://127.0.0.1:5000/career-guidance")
     print("AskAway          : http://127.0.0.1:5000/ask-away")
     print("VoiceSnap        : http://127.0.0.1:5000/voice-snap")

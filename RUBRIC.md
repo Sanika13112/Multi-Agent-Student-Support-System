@@ -7,7 +7,7 @@ The **NLP Pipeline** (`nlp/pipeline.py`) runs one study document through every s
 | # | Criterion | CO | Marks | Pipeline stages | Main code |
 |---|---|---|---|---|---|
 | 1 | Text extraction, preprocessing, cleaning and vectorization of unstructured data | CO1 | 7 | 1 Text extraction · 2 Cleaning · 3 Tokenization, stop words, stemming · 4 TF-IDF | `modules/common/document_loader.py`, `nlp/preprocess.py` |
-| 2 | Implementation and evaluation of sentiment analysis and information extraction | CO2 | 8 | 5 Sentiment · 6 Information extraction · 7 Evaluation | `nlp/sentiment.py`, `nlp/information_extraction.py`, `nlp/evaluation.py` |
+| 2 | Implementation and evaluation of sentiment analysis and information extraction | CO2 | 8 | 5 Sentiment · 6 Information extraction · 7 Evaluation · **BrainCheck student feedback** | `nlp/sentiment.py`, `nlp/feedback_analysis.py`, `nlp/information_extraction.py`, `nlp/evaluation.py` |
 | 3 | Topic modeling or multilingual NLP with NLP techniques and cloud-based AI services | CO3 | 7 | 8 LDA topics · 9 Language detection · 11 Cloud translation | `nlp/topic_modeling.py`, `nlp/multilingual.py`, `modules/notice_translator/` |
 | 4 | Generative AI/LLM application, prompt engineering, integration, working demo | CO4 | 8 | 10 LLM summary with an engineered prompt | `nlp/pipeline.py` (prompt), `modules/common/ai_client.py` (Ollama) |
 
@@ -78,6 +78,23 @@ Stages 10 and 11 were not run in the build environment (no Ollama, no internet).
     - "*A greedy algorithm makes the locally best choice*" has no definition verb, so it is not caught.
     - SAT expands to "*Satisfiability*" instead of "*Boolean satisfiability*".
 
+### CO2 in BrainCheck: student feedback and performance
+
+Sentiment fits opinions better than study notes, so BrainCheck collects real student opinions:
+
+1. After a quiz, the student gives **1–5 stars** and writes feedback (BrainCheck → results → *How was this quiz?*).
+2. `nlp/feedback_analysis.py` runs **VADER** on the text and finds the **aspects** it mentions (Difficulty, Timer, Questions, Explanations, Topic coverage) using a keyword lexicon. Each aspect gets the sentiment of the sentences that mention it: **aspect-based sentiment analysis**.
+3. The result is stored in MySQL table `quiz_feedback`, linked to the quiz attempt and its score.
+4. The **Student Feedback & Sentiment** card in *Student Performance* shows:
+   - the sentiment split and the **average quiz score per sentiment**;
+   - the **Pearson correlation** between score and sentiment (do students who score higher write happier feedback?);
+   - how often each aspect is mentioned, and how positively;
+   - **evaluation on real data:** VADER vs each student's own star rating (4–5★ = Positive, 3★ = Neutral, 1–2★ = Negative), with accuracy, precision, recall, F1 and a confusion matrix.
+
+Known VADER limits this exposes (good viva points):
+- *"the timer was too short"* scores neutral, because VADER has no word for "too short" being bad.
+- *"Okay quiz."* scores positive while the student gave 3 stars.
+
 ### CO3: topics and languages
 
 - **LDA:** each segment is a mixture of topics, and each topic is a distribution over words. Built on a bag-of-words count matrix. **Perplexity** measures how well the model predicts the text (lower is better, comparable only on the same data).
@@ -106,8 +123,10 @@ This is a simple, explainable way to evaluate generated text.
   - `nlp/pipeline.py`, `nlp/information_extraction.py`, `nlp/multilingual.py`, `run_pipeline.py`
   - `templates/nlp_pipeline.html`, `static/js/nlp_pipeline.js`, `static/css/pages/nlp-pipeline.css`
   - `tests/test_pipeline.py`, `tests/test_information_extraction.py`, `RUBRIC.md`
+  - BrainCheck feedback: `nlp/feedback_analysis.py`, `static/js/brain_check_feedback.js`, `tests/test_feedback_analysis.py`
 - **Changed:**
-  - `app.py`: `/nlp-pipeline` page and `POST /api/nlp-pipeline/run`.
+  - `app.py`: `/nlp-pipeline` page and `POST /api/nlp-pipeline/run`; BrainCheck feedback APIs `POST /api/brain-check/feedback` and `GET /api/brain-check/feedback-summary`.
+  - `templates/brain_check.html`, `static/js/brain_check.js`, `static/css/pages/brain-check.css`: feedback form, save events and dashboard card.
   - `templates/config/navigation.html`: sidebar entry.
   - `static/css/main.css`: page stylesheet import.
   - `modules/notice_translator/__init__.py`: loads the OCR service only when it is used, so text translation doesn't load EasyOCR.

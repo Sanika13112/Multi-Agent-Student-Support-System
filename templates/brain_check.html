@@ -72,6 +72,38 @@
             <h3 class="bc-review-title">Answer review</h3>
             <div id="answerReview" class="bc-review-list"></div>
 
+            {# Student feedback: analysed with sentiment analysis (static/js/brain_check_feedback.js). #}
+            <section class="bc-feedback" id="feedbackSection" aria-labelledby="feedbackHeading">
+                <h3 class="bc-review-title" id="feedbackHeading">How was this quiz?</h3>
+                <p class="muted text-sm">Rate the quiz and tell us what worked. Your feedback is analysed with sentiment analysis and shown in Student Performance.</p>
+
+                <fieldset class="bc-rating" id="feedbackRating">
+                    <legend class="field-label">Rating</legend>
+                    {% for value in range(1, 6) %}
+                    <input type="radio" class="visually-hidden" name="feedbackRating" id="rating{{ value }}" value="{{ value }}">
+                    <label for="rating{{ value }}" data-value="{{ value }}" title="{{ value }} star{{ 's' if value > 1 }}">
+                        <i class="bi bi-star-fill" aria-hidden="true"></i>
+                        <span class="visually-hidden">{{ value }} star{{ 's' if value > 1 }}</span>
+                    </label>
+                    {% endfor %}
+                </fieldset>
+
+                <div class="field">
+                    <label class="field-label" for="feedbackText">Feedback</label>
+                    <textarea class="textarea" id="feedbackText" rows="3" maxlength="1000"
+                              placeholder="Were the questions clear? Was the difficulty right? Was there enough time?"></textarea>
+                </div>
+
+                <div class="bc-feedback-actions">
+                    <button type="button" class="btn btn-secondary" id="submitFeedbackButton" disabled>
+                        <i class="bi bi-send" aria-hidden="true"></i> Submit feedback
+                    </button>
+                    <span class="bc-feedback-status" id="feedbackStatus" role="status" aria-live="polite"></span>
+                </div>
+
+                <div class="bc-feedback-result" id="feedbackResult" hidden></div>
+            </section>
+
             <div class="bc-results-actions">
                 <button type="button" class="btn btn-primary" id="restartQuizButton">
                     <i class="bi bi-arrow-repeat" aria-hidden="true"></i> Create another quiz
@@ -167,4 +199,5 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/brain_check.js') }}"></script>
+<script src="{{ url_for('static', filename='js/brain_check_feedback.js') }}"></script>
 {% endblock %}
