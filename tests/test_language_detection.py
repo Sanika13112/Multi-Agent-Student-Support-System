@@ -22,7 +22,10 @@ Candidates must report at 9 AM.
 # fastText expects a single line
 text = " ".join(text.split())
 
-labels, probabilities = model.predict(text, k=3)
+# fasttext_predict works with both NumPy 1 and NumPy 2.
+from nlp.multilingual import fasttext_predict
+
+predictions = fasttext_predict(model, text, k=3)
 
 print("\n--- LANGUAGE DETECTION RESULT ---")
 
@@ -32,7 +35,7 @@ language_names = {
     "mr": "Marathi"
 }
 
-for label, probability in zip(labels, probabilities):
+for label, probability in predictions:
     code = label.replace("__label__", "")
     name = language_names.get(code, "Other language")
 

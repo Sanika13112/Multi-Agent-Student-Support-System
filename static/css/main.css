@@ -31,5 +31,6 @@
 @import url("pages/ask-away.css") layer(pages);
 @import url("pages/brain-check.css") layer(pages);
 @import url("pages/career-guidance.css") layer(pages);
+@import url("pages/nlp-pipeline.css") layer(pages);
 
 @import url("utilities.css") layer(utilities);

@@ -1,0 +1,86 @@
+{% extends "layouts/app.html" %}
+{% import "macros/ui.html" as ui %}
+
+{#
+    NLP Pipeline page: runs nlp/pipeline.py on one document and shows every
+    stage's output grouped by Course Outcome (CO1-CO4), matching the
+    project demonstration rubric. The page script is static/js/nlp_pipeline.js.
+#}
+
+{% block title %}NLP Pipeline{% endblock %}
+{% block body_class %}page-nlp-pipeline{% endblock %}
+
+{% block page_title %}NLP Pipeline{% endblock %}
+{% block page_description %}Run one document through every NLP stage, from text extraction to the LLM summary, and see what each stage produced.{% endblock %}
+
+{% block content %}
+<div class="workspace">
+    <div class="workspace-controls">
+        <section class="panel">
+            {{ ui.panel_header("1. Your document", "PDF or TXT up to 20 MB, or paste text below.") }}
+
+            {% call ui.dropzone("pipelineFile", "Upload a document", "Click to browse your files", "PDF or TXT", icon="file-earmark-arrow-up", show_filename=True) %}
+                <input type="file" id="pipelineFile" accept=".pdf,.txt" hidden>
+            {% endcall %}
+
+            <div class="field np-paste">
+                <label class="field-label" for="pipelineText">Or paste text</label>
+                <textarea class="textarea" id="pipelineText" rows="4"
+                          placeholder="At least 200 characters of study notes…"></textarea>
+                <span class="field-hint">Used only when no file is chosen.</span>
+            </div>
+        </section>
+
+        <section class="panel">
+            {{ ui.panel_header("2. Options") }}
+
+            <label class="switch-row" for="useLlm">
+                <span class="switch-row-text">
+                    <strong>LLM summary (CO4)</strong>
+                    <small>Needs Ollama running with Qwen</small>
+                </span>
+                <input type="checkbox" class="switch" id="useLlm" checked>
+            </label>
+
+            <div class="form-grid np-options">
+                <div class="field">
+                    <label class="field-label" for="translateTo">Translate summary (CO3)</label>
+                    <select class="select" id="translateTo">
+                        <option value="">Don't translate</option>
+                        <option value="hi">Hindi</option>
+                        <option value="mr">Marathi</option>
+                    </select>
+                    <span class="field-hint">Cloud service, needs internet</span>
+                </div>
+                <div class="field">
+                    <label class="field-label" for="numTopics">LDA topics</label>
+                    <input class="input" type="number" id="numTopics" min="2" max="15" value="5">
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-primary btn-block" id="runPipeline">
+                <i class="bi bi-play-fill" aria-hidden="true"></i> Run pipeline
+            </button>
+            <p class="status" id="pipelineStatus" role="status" aria-live="polite"></p>
+        </section>
+    </div>
+
+    <div class="workspace-output" id="pipelineOutput">
+        {{ ui.empty_state(
+            "Run the pipeline to see every stage",
+            "Each result is grouped by the rubric criterion it demonstrates.",
+            points=[
+                "CO1 · Extraction, cleaning, tokenization and TF-IDF",
+                "CO2 · Sentiment, information extraction and evaluation",
+                "CO3 · LDA topics, language detection and cloud translation",
+                "CO4 · Prompt-engineered summary from the local LLM"
+            ],
+            id="pipelineEmpty"
+        ) }}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/nlp_pipeline.js') }}"></script>
+{% endblock %}

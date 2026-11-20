@@ -378,11 +378,12 @@ def predict_language(text):
     if len(normalized) < 3:
         return None
 
-    labels, probabilities = model.predict(normalized, k=3)
+    # fasttext_predict works with both NumPy 1 and NumPy 2.
+    from nlp.multilingual import fasttext_predict
 
     predictions = []
 
-    for label, probability in zip(labels, probabilities):
+    for label, probability in fasttext_predict(model, normalized, k=3):
         code = label.replace("__label__", "")
 
         predictions.append({

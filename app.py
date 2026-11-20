@@ -10,6 +10,7 @@ Modules:
 - QuickNotes
 - BrainCheck
 - Career Guidance
+- NLP Pipeline (CO1-CO4 end-to-end demonstration)
 """
 
 import json
@@ -290,6 +291,12 @@ def career_guidance():
 def ask_away():
     """Render the AskAway document chatbot workspace."""
     return render_template("ask_away.html")
+
+@app.route("/nlp-pipeline")
+def nlp_pipeline():
+    """Render the end-to-end NLP Pipeline page (CO1 - CO4 demonstration)."""
+    return render_template("nlp_pipeline.html")
+
 
 @app.route("/notice-translator")
 def notice_translator():
@@ -2231,6 +2238,123 @@ def extract_keywords_api():
 
 
 # ==================================================
+# 17A. END-TO-END NLP PIPELINE API (CO1 - CO4)
+# ==================================================
+
+@app.route("/api/nlp-pipeline/run", methods=["POST"])
+def run_nlp_pipeline_api():
+    """
+    Run every NLP stage on one uploaded PDF/TXT (or pasted text) and
+    return the stage-by-stage report. See nlp/pipeline.py.
+
+    Form fields:
+        file         PDF or TXT (optional if "text" is sent)
+        text         pasted text (used when no file is sent)
+        use_llm      "true"/"false"  - run the Ollama summary (stage 10)
+        translate_to "", "hi" or "mr" - run the cloud translation (stage 11)
+        num_topics   2-15            - number of LDA topics
+    """
+
+    temporary_path = None
+
+    try:
+        from nlp.pipeline import run_pipeline
+
+        use_llm = request.form.get("use_llm", "true").strip().lower() == "true"
+
+        translate_to = request.form.get("translate_to", "").strip().lower() or None
+        if translate_to not in (None, "hi", "mr"):
+            return create_error_response("Translation language must be Hindi or Marathi.")
+
+        try:
+            num_topics = int(request.form.get("num_topics", 5))
+        except (TypeError, ValueError):
+            num_topics = 5
+        num_topics = max(2, min(num_topics, 15))
+
+        uploaded_file = request.files.get("file")
+        pasted_text = request.form.get("text", "").strip()
+
+        if uploaded_file and uploaded_file.filename:
+            original_filename = secure_filename(uploaded_file.filename)
+
+            if not original_filename or not allowed_file(original_filename):
+                return create_error_response("Only PDF and TXT files are supported.")
+
+            with tempfile.NamedTemporaryFile(
+                mode="wb",
+                suffix=Path(original_filename).suffix.lower(),
+                prefix="pipeline_",
+                delete=False
+            ) as temporary_file:
+                uploaded_file.save(temporary_file)
+                temporary_path = temporary_file.name
+
+            file_size = get_uploaded_file_size(temporary_path)
+
+            if file_size == 0:
+                return create_error_response("The uploaded file is empty.")
+
+            if file_size > MAX_FILE_SIZE:
+                return create_error_response("File size exceeds the 20 MB limit.")
+
+            report = run_pipeline(
+                file_path=temporary_path,
+                title=original_filename,
+                use_llm=use_llm,
+                translate_to=translate_to,
+                num_topics=num_topics,
+            )
+
+        elif pasted_text:
+            if len(pasted_text) < 200:
+                return create_error_response(
+                    "Please paste at least 200 characters so every stage has enough text."
+                )
+
+            report = run_pipeline(
+                text=pasted_text,
+                title="Pasted text",
+                use_llm=use_llm,
+                translate_to=translate_to,
+                num_topics=num_topics,
+            )
+
+        else:
+            return create_error_response("Upload a PDF/TXT file or paste some text.")
+
+        logger.info(
+            "NLP pipeline finished | %s | done %d, failed %d, %.2fs",
+            report["title"],
+            report["totals"]["done"],
+            report["totals"]["failed"],
+            report["totals"]["seconds"],
+        )
+
+        from nlp.pipeline import render_markdown
+
+        return jsonify({
+            "success": True,
+            "report": report,
+            "markdown": render_markdown(report),
+        }), 200
+
+    except Exception:
+        logger.exception("NLP pipeline failed.")
+        return create_error_response(
+            "The NLP pipeline could not run. Please check the file and try again.",
+            500
+        )
+
+    finally:
+        if temporary_path and os.path.exists(temporary_path):
+            try:
+                os.remove(temporary_path)
+            except OSError:
+                logger.warning("Could not delete pipeline temporary file: %s", temporary_path)
+
+
+# ==================================================
 # 18. ERROR HANDLERS
 # ==================================================
 
@@ -2286,6 +2410,8 @@ if __name__ == "__main__":
     print("Sentiment Eval   : GET  /api/sentiment/evaluate")
     print("Topic Modeling   : POST /api/topic-modeling/extract")
     print("TF-IDF Keywords  : POST /api/topic-modeling/keywords")
+    print("NLP Pipeline     : http://127.0.0.1:5000/nlp-pipeline")
+    print("Pipeline API     : POST /api/nlp-pipeline/run")
 
     print("=" * 52)
     print("\n")

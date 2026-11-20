@@ -27,3 +27,11 @@ env/
 # OS files
 .DS_Store
 Thumbs.db
+reports/
+
+# Git
+.git/
+
+# Generated files
+static/generated/
+uploads/
