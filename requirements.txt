@@ -8,3 +8,12 @@ pypdf
 reportlab
 python-dotenv
 anthropic
+gunicorn
+
+
+# cd /d D:\nlp_project\Multi-Agent-Student-Support-System
+# venv\Scripts\activate
+# sc query MySQL80
+# ollama serve
+# ollama run qwen2.5:3b
+# python app.py
