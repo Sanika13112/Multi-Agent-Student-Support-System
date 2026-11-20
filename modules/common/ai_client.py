@@ -1,29 +1,110 @@
 
 """
 Multi-Agent Student Support System
+Dual-provider AI Client
 
-Optimized Ollama AI Client
-
-Connects Python with the locally running
-Qwen2.5:1.5B language model.
+Local: Ollama + Qwen2.5
+Cloud: Groq API
 """
 
+import os
 import math
 import ollama
+from groq import Groq
 
 
 # =========================================
-# 1. MODEL CONFIGURATION
+# 1. PROVIDER CONFIGURATION
 # =========================================
 
-MODEL_NAME = "qwen2.5:1.5b"
+AI_PROVIDER = os.getenv("AI_PROVIDER", "ollama").lower()
 
-# Keep the model loaded for 10 minutes.
-MODEL_KEEP_ALIVE = "10m"
+OLLAMA_MODEL = "qwen2.5:1.5b"
+OLLAMA_KEEP_ALIVE = "10m"
+
+GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
 
 
 # =========================================
-# 2. AI RESPONSE GENERATION
+# 2. OLLAMA RESPONSE
+# =========================================
+
+def generate_ollama_response(
+    messages,
+    temperature,
+    max_tokens,
+    json_mode
+):
+    options = {
+        "temperature": temperature,
+        "num_ctx": 4096
+    }
+
+    if max_tokens is not None:
+        options["num_predict"] = max_tokens
+
+    extra_arguments = {"format": "json"} if json_mode else {}
+
+    response = ollama.chat(
+        model=OLLAMA_MODEL,
+        messages=messages,
+        options=options,
+        keep_alive=OLLAMA_KEEP_ALIVE,
+        **extra_arguments
+    )
+
+    answer = response["message"]["content"]
+
+    if not isinstance(answer, str) or not answer.strip():
+        raise RuntimeError("Ollama returned an empty response.")
+
+    return answer.strip()
+
+
+# =========================================
+# 3. GROQ RESPONSE
+# =========================================
+
+def generate_groq_response(
+    messages,
+    temperature,
+    max_tokens,
+    json_mode
+):
+    api_key = os.getenv("GROQ_API_KEY")
+
+    if not api_key:
+        raise RuntimeError(
+            "GROQ_API_KEY is missing from environment variables."
+        )
+
+    client = Groq(api_key=api_key)
+
+    arguments = {
+        "model": GROQ_MODEL,
+        "messages": messages,
+        "temperature": temperature,
+        "max_completion_tokens": max_tokens or 1200,
+"reasoning_effort": "low"
+    }
+
+    if json_mode:
+        arguments["response_format"] = {
+            "type": "json_object"
+        }
+
+    response = client.chat.completions.create(**arguments)
+
+    answer = response.choices[0].message.content
+
+    if not isinstance(answer, str) or not answer.strip():
+        raise RuntimeError("Groq returned an empty response.")
+
+    return answer.strip()
+
+
+# =========================================
+# 4. MAIN AI RESPONSE GENERATION
 # =========================================
 
 def generate_response(
@@ -33,44 +114,15 @@ def generate_response(
     max_tokens=None,
     json_mode=False
 ):
-    """
-    Generate an AI response using local Ollama.
-
-    Parameters:
-        prompt (str): User's question or instruction.
-        system_prompt (str): Optional system instructions.
-        temperature (float): Controls response creativity.
-        max_tokens (int): Maximum generated tokens.
-        json_mode (bool): Force the model to output valid JSON.
-            Ollama then only allows tokens that keep the output valid
-            JSON, which small models like qwen2.5:1.5b need for long
-            structured answers (Career Guidance, BrainCheck).
-
-    Returns:
-        str: AI-generated response.
-
-    Raises:
-        ValueError: If input values are invalid.
-        RuntimeError: If Ollama generation fails.
-    """
-
-    # =====================================
-    # STEP 1: VALIDATE USER PROMPT
-    # =====================================
+    """Generate responses using Ollama locally or Groq in the cloud."""
 
     if not isinstance(prompt, str) or not prompt.strip():
         raise ValueError("Prompt cannot be empty.")
 
-    # =====================================
-    # STEP 2: VALIDATE SYSTEM PROMPT
-    # =====================================
-
-    if system_prompt is not None and not isinstance(system_prompt, str):
+    if system_prompt is not None and not isinstance(
+        system_prompt, str
+    ):
         raise TypeError("System prompt must be a string.")
-
-    # =====================================
-    # STEP 3: VALIDATE TEMPERATURE
-    # =====================================
 
     if (
         isinstance(temperature, bool)
@@ -81,27 +133,19 @@ def generate_response(
     if not math.isfinite(temperature) or not 0 <= temperature <= 2:
         raise ValueError("Temperature must be between 0 and 2.")
 
-    # =====================================
-    # STEP 4: VALIDATE MAX TOKENS
-    # =====================================
-
     if max_tokens is not None:
-
         if (
             isinstance(max_tokens, bool)
             or not isinstance(max_tokens, int)
             or max_tokens <= 0
         ):
-            raise ValueError("max_tokens must be a positive integer.")
-
-    # =====================================
-    # STEP 5: PREPARE CHAT MESSAGES
-    # =====================================
+            raise ValueError(
+                "max_tokens must be a positive integer."
+            )
 
     messages = []
 
     if system_prompt and system_prompt.strip():
-
         messages.append({
             "role": "system",
             "content": system_prompt.strip()
@@ -112,90 +156,72 @@ def generate_response(
         "content": prompt.strip()
     })
 
-    # =====================================
-    # STEP 6: GENERATION OPTIONS
-    # =====================================
-
-    options = {
-        "temperature": temperature,
-        "num_ctx": 4096
-    }
-
-    if max_tokens is not None:
-        options["num_predict"] = max_tokens
-
-    # =====================================
-    # STEP 7: GENERATE AI RESPONSE
-    # =====================================
-
     try:
+        if AI_PROVIDER == "ollama":
+            return generate_ollama_response(
+                messages,
+                temperature,
+                max_tokens,
+                json_mode
+            )
 
-        # format="json" turns on Ollama's JSON mode (only when asked).
-        extra_arguments = {"format": "json"} if json_mode else {}
+        elif AI_PROVIDER == "groq":
+            return generate_groq_response(
+                messages,
+                temperature,
+                max_tokens,
+                json_mode
+            )
 
-        response = ollama.chat(
-            model=MODEL_NAME,
-            messages=messages,
-            options=options,
-            keep_alive=MODEL_KEEP_ALIVE,
-            **extra_arguments
-        )
-
-        answer = response["message"]["content"]
-
-        if not isinstance(answer, str) or not answer.strip():
-            raise RuntimeError("The AI model returned an empty response.")
-
-        return answer.strip()
-
-    except ollama.ResponseError as error:
-
-        raise RuntimeError(
-            f"Ollama model error: {error.error}"
-        ) from error
+        else:
+            raise ValueError(
+                f"Unsupported AI_PROVIDER: {AI_PROVIDER}"
+            )
 
     except Exception as error:
-
         raise RuntimeError(
-            "Unable to generate AI response. "
-            "Make sure Ollama is running and "
-            f"{MODEL_NAME} is installed. Details: {error}"
+            f"AI response generation failed using "
+            f"{AI_PROVIDER}: {error}"
         ) from error
 
 
 # =========================================
-# 3. CHECK OLLAMA CONNECTION
+# 5. CONNECTION CHECK
 # =========================================
 
 def check_ollama_connection():
-    """
-    Check whether Ollama is running
-    and the required model is available.
+    """Check whether the local Ollama model is available."""
 
-    Returns:
-        bool: True if the model is available,
-              otherwise False.
-    """
+    if AI_PROVIDER != "ollama":
+        return False
 
     try:
-
         models = ollama.list()
 
-        available_models = []
-
-        for model in models.models:
-
-            model_name = model.model
-
-            if model_name:
-                available_models.append(model_name)
+        available_models = [
+            model.model
+            for model in models.models
+            if model.model
+        ]
 
         return any(
-            name == MODEL_NAME
-            or name.startswith(MODEL_NAME + ":")
+            name == OLLAMA_MODEL
+            or name.startswith(OLLAMA_MODEL + ":")
             for name in available_models
         )
 
-    except Exception:
-
+    except Exception as error:
+        print(f"Ollama connection error: {error}")
         return False
+
+
+def check_ai_connection():
+    """Check whether the configured AI provider is configured."""
+
+    if AI_PROVIDER == "ollama":
+        return check_ollama_connection()
+
+    if AI_PROVIDER == "groq":
+        return bool(os.getenv("GROQ_API_KEY"))
+
+    return False

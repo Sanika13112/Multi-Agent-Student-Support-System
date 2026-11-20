@@ -12,6 +12,11 @@ gunicorn
 faster-whisper
 ollama
 PyMuPDF
+groq
+
+
+
+
 # cd /d D:\nlp_project\Multi-Agent-Student-Support-System
 # venv\Scripts\activate
 # sc query MySQL80

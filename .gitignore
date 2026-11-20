@@ -28,3 +28,7 @@ env/
 .DS_Store
 Thumbs.db
 reports/
+.env
+venv/
+__pycache__/
+*.pyc
