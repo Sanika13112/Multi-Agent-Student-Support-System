@@ -9,6 +9,7 @@ reportlab
 python-dotenv
 anthropic
 gunicorn
+faster-whisper
 
 
 # cd /d D:\nlp_project\Multi-Agent-Student-Support-System
