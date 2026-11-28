@@ -19,18 +19,7 @@ B.Tech CSE (AIML) · NLP course project.
 | **Career Guidance** | Career paths, skill gaps and a learning roadmap | Your profile |
 | **NLP Pipeline** | Runs one document through every NLP stage (CO1–CO4) and shows each stage's output | PDF, TXT or pasted text |
 
-## How it maps to the project rubric
 
-The **NLP Pipeline** page demonstrates all four rubric rows on one document. See **[RUBRIC.md](RUBRIC.md)** for the stage-by-stage mapping, measured results and viva notes.
-
-| Rubric row | CO | Marks | Where |
-|---|---|---|---|
-| Text extraction, preprocessing, cleaning, vectorization | CO1 | 7 | Pipeline stages 1–4 · `nlp/preprocess.py` |
-| Sentiment analysis + information extraction, with evaluation | CO2 | 8 | Stages 5–7 · **BrainCheck student feedback** · `nlp/sentiment.py`, `nlp/feedback_analysis.py`, `nlp/information_extraction.py`, `nlp/evaluation.py` |
-| Topic modeling / multilingual NLP with a cloud AI service | CO3 | 7 | Stages 8, 9, 11 · `nlp/topic_modeling.py`, `nlp/multilingual.py`, Notice Translator |
-| Generative AI, prompt engineering, integration, working demo | CO4 | 8 | Stage 10 · whole app · `modules/common/ai_client.py` |
-
----
 
 ## Tech stack
 
